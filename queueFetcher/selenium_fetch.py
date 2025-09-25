@@ -51,7 +51,7 @@ def load_cookies_into_session(session):
         session.cookies.set(c['name'], c['value'], domain=c.get('domain'))
     return session
 
-def fetch_json_using_cookies():
+def save_json_file_using_cookies():
     s = requests.Session()
     s = load_cookies_into_session(s)
     r = s.get(JSON_URL, timeout=20)
@@ -65,6 +65,20 @@ def fetch_json_using_cookies():
         f.write(r.content)
     print(f"Saved {fn}")
 
+# Continuously fetch and print JSON to console
+def fetch_and_print_json():
+    s = requests.Session()
+    s = load_cookies_into_session(s)
+
+    while True:
+        print("Fetching JSON...")
+        r = s.get(JSON_URL, timeout=20)
+        if r.status_code != 200:
+            raise RuntimeError(f"Failed to fetch JSON: {r.status_code} body: {r.text[:200]}")
+        data = r.json()
+        print(json.dumps(data, indent=2))
+        time.sleep(2)  # wait before next fetch
+
 if __name__ == "__main__":
     # Step 1: if you don't have cookies yet, run interactive login once:
     if not os.path.exists(COOKIES_FILE):
@@ -73,4 +87,5 @@ if __name__ == "__main__":
         print("Now run this script again (or it will continue to fetch once).")
 
     # Step 2: fetch JSON using saved cookies
-    fetch_json_using_cookies()
+    # save_json_file_using_cookies()
+    fetch_and_print_json()
