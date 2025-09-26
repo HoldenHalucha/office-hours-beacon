@@ -14,7 +14,7 @@ from selenium.webdriver.chrome.options import Options
 import requests
 
 OUT_DIR = "./outstanding_json"
-JSON_URL = "https://oh.eecs.umich.edu/course_queues/744/outstanding_requests.json"
+JSON_URL = "https://oh.eecs.umich.edu/course_queues/905/outstanding_requests.json"
 COOKIES_FILE = "oh_cookies.json"
 
 os.makedirs(OUT_DIR, exist_ok=True)
@@ -66,13 +66,15 @@ def save_json_file_using_cookies():
     print(f"Saved {fn}")
 
 # Continuously fetch and print JSON to console
-def fetch_and_print_json():
+def fetch_and_print_json(course_id = 905):
     s = requests.Session()
     s = load_cookies_into_session(s)
 
+    json_url = f"https://oh.eecs.umich.edu/course_queues/{course_id}/outstanding_requests.json"
+
     while True:
         print("Fetching JSON...")
-        r = s.get(JSON_URL, timeout=20)
+        r = s.get(json_url, timeout=20)
         if r.status_code != 200:
             raise RuntimeError(f"Failed to fetch JSON: {r.status_code} body: {r.text[:200]}")
         data = r.json()
