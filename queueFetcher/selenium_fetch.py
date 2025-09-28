@@ -12,6 +12,7 @@ from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import requests
+import threading
 
 OUT_DIR = "./outstanding_json"
 JSON_URL = "https://oh.eecs.umich.edu/course_queues/905/outstanding_requests.json"
@@ -66,20 +67,32 @@ def save_json_file_using_cookies():
     print(f"Saved {fn}")
 
 # Continuously fetch and print JSON to console
-def fetch_and_print_json(course_id = 905):
+def fetch_loop(course_id = 905, polling_interval_seconds=2, verbose=False):
     s = requests.Session()
     s = load_cookies_into_session(s)
 
     json_url = f"https://oh.eecs.umich.edu/course_queues/{course_id}/outstanding_requests.json"
 
     while True:
-        print("Fetching JSON...")
         r = s.get(json_url, timeout=20)
         if r.status_code != 200:
             raise RuntimeError(f"Failed to fetch JSON: {r.status_code} body: {r.text[:200]}")
         data = r.json()
-        print(json.dumps(data, indent=2))
-        time.sleep(2)  # wait before next fetch
+
+        if verbose: 
+            print(f"Fetching course {course_id}")
+            print(json.dumps(data, indent=2))
+
+        time.sleep(polling_interval_seconds)  # wait before next fetch
+
+def create_fetch_threads(course_ids, polling_interval_seconds=2, verbose=False):
+    import threading
+    threads = []
+    for course_id in course_ids:
+        t = threading.Thread(target=fetch_loop, args=(course_id, polling_interval_seconds, verbose))
+        t.start()
+        threads.append(t)
+    return threads
 
 if __name__ == "__main__":
     # Step 1: if you don't have cookies yet, run interactive login once:
@@ -90,4 +103,14 @@ if __name__ == "__main__":
 
     # Step 2: fetch JSON using saved cookies
     # save_json_file_using_cookies()
-    fetch_and_print_json()
+    courses_to_monitor = [905, 826]  # Add course IDs as needed
+
+    # Step 3: Start threads to continuously fetch JSON for multiple courses
+    threads = []
+    try:
+        threads = create_fetch_threads(courses_to_monitor, polling_interval_seconds=5, verbose=True)
+    
+    except KeyboardInterrupt:
+        print("Exiting on user request.")
+        for t in threads:
+            t.join()
