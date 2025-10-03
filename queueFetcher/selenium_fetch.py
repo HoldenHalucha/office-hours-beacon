@@ -13,12 +13,20 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import requests
 import threading
+import serial
 
 OUT_DIR = "./outstanding_json"
 JSON_URL = "https://oh.eecs.umich.edu/course_queues/905/outstanding_requests.json"
-COOKIES_FILE = "oh_cookies.json"
+COOKIES_FILE = "/home/user473/Documents/project/oh_cookies.json"
 
 os.makedirs(OUT_DIR, exist_ok=True)
+
+# Configure the serial port and baud rate
+ser = serial.Serial(
+    port='/dev/serial0',  # or '/dev/ttyS0' depending on your Pi model and OS
+    baudrate=115200,
+    timeout=1
+)
 
 def get_driver(headless=True):
     opts = Options()
@@ -79,9 +87,13 @@ def fetch_loop(course_id = 905, polling_interval_seconds=2, verbose=False):
             raise RuntimeError(f"Failed to fetch JSON: {r.status_code} body: {r.text[:200]}")
         data = r.json()
 
-        if verbose: 
-            print(f"Fetching course {course_id}")
-            print(json.dumps(data, indent=2))
+        for request in data:
+            packet = f"email: {request['requester']['email']}, location: {request['location']}\n"
+            ser.write(packet.encode('utf-8'))
+
+            if verbose:
+                print(f"Fetching course {course_id}")
+                print(packet)
 
         time.sleep(polling_interval_seconds)  # wait before next fetch
 
@@ -97,18 +109,20 @@ def create_fetch_threads(course_ids, polling_interval_seconds=2, verbose=False):
 if __name__ == "__main__":
     # Step 1: if you don't have cookies yet, run interactive login once:
     if not os.path.exists(COOKIES_FILE):
-        print("No cookies found. Starting interactive login to obtain them.")
-        interactive_login_and_save_cookies("https://oh.eecs.umich.edu/")
-        print("Now run this script again (or it will continue to fetch once).")
+        print("Cookie files not found. Exiting...")
+        exit(1)
+        # print("No cookies found. Starting interactive login to obtain them.")
+        # interactive_login_and_save_cookies("https://oh.eecs.umich.edu/")
+        # print("Now run this script again (or it will continue to fetch once).")
 
     # Step 2: fetch JSON using saved cookies
     # save_json_file_using_cookies()
-    courses_to_monitor = [905, 826]  # Add course IDs as needed
+    courses_to_monitor = [905]  # Add course IDs as needed
 
     # Step 3: Start threads to continuously fetch JSON for multiple courses
     threads = []
     try:
-        threads = create_fetch_threads(courses_to_monitor, polling_interval_seconds=5, verbose=True)
+        threads = create_fetch_threads(courses_to_monitor, polling_interval_seconds=2, verbose=True)
     
     except KeyboardInterrupt:
         print("Exiting on user request.")
