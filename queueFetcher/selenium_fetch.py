@@ -17,7 +17,9 @@ import serial
 
 OUT_DIR = "./outstanding_json"
 JSON_URL = "https://oh.eecs.umich.edu/course_queues/905/outstanding_requests.json"
-COOKIES_FILE = "/home/user473/Documents/project/oh_cookies.json"
+
+# Absolute path to cookies file
+COOKIES_FILE = "/home/user473/Documents/project/office-hours-beacon/queueFetcher/oh_cookies.json"
 
 os.makedirs(OUT_DIR, exist_ok=True)
 
@@ -87,13 +89,32 @@ def fetch_loop(course_id = 905, polling_interval_seconds=2, verbose=False):
             raise RuntimeError(f"Failed to fetch JSON: {r.status_code} body: {r.text[:200]}")
         data = r.json()
 
+        if verbose: 
+            print("--------------------------------")
+            print(f"Fetching course {course_id}")
+
+        if not data:
+            if verbose: print("No outstanding requests")
+            ser.write(bytes([0]))  # Send '0' for no requests
+            time.sleep(polling_interval_seconds)
+            continue
+        
+        up_next = data[0]
+        if up_next['location'] == "B1":
+            if verbose: print("B1 detected")
+            ser.write(bytes([1]))  # Send '1' for B1
+        else:
+            ser.write(bytes([0]))  # Send '0' for not found
+        
         for request in data:
             packet = f"email: {request['requester']['email']}, location: {request['location']}\n"
-            ser.write(packet.encode('utf-8'))
+            # ser.write(packet.encode('utf-8'))
 
             if verbose:
-                print(f"Fetching course {course_id}")
                 print(packet)
+
+
+
 
         time.sleep(polling_interval_seconds)  # wait before next fetch
 
@@ -117,7 +138,7 @@ if __name__ == "__main__":
 
     # Step 2: fetch JSON using saved cookies
     # save_json_file_using_cookies()
-    courses_to_monitor = [905]  # Add course IDs as needed
+    courses_to_monitor = [896]  # Add course IDs as needed
 
     # Step 3: Start threads to continuously fetch JSON for multiple courses
     threads = []

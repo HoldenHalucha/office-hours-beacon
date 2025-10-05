@@ -1,7 +1,5 @@
 # JSON data files
-*.json
 outstanding_json/
-oh_cookies.json
 
 # C/C++
 *.o
