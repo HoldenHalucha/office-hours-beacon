@@ -1,16 +1,25 @@
 #include <esp_now.h>
 #include <WiFi.h>
 
-typedef struct struct_message {
-  char a[32];
-} struct_message;
-
-struct_message myData;
+char receivedData;
 
 void OnDataRecv(const uint8_t * mac, const uint8_t * incomingData, int len) {
-  memcpy(&myData, incomingData, sizeof(myData));
-  Serial.print("Received: ");
-  Serial.println(myData.a);
+  if(len == sizeof(receivedData)) {
+    memcpy(&receivedData, incomingData, sizeof(receivedData));
+    Serial.print("Received: ");
+    Serial.println((int)receivedData);
+
+    int led_status = receivedData;
+    if(led_status == 1) {
+      digitalWrite(25, HIGH); 
+    }
+    else {
+      digitalWrite(25, LOW); 
+    }
+  } else {
+    Serial.print("Incorrect data length received: ");
+    Serial.println(len);
+  }
 }
 
 void setup() {
@@ -23,8 +32,9 @@ void setup() {
   }
 
   esp_now_register_recv_cb(OnDataRecv);
+
+  pinMode(25, OUTPUT);
 }
 
 void loop() {
-  // Nothing needed
 }
