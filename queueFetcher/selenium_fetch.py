@@ -87,26 +87,26 @@ def fetch_loop(course_id = 905, polling_interval_seconds=2, verbose=False):
         r = s.get(json_url, timeout=20)
         if r.status_code != 200:
             raise RuntimeError(f"Failed to fetch JSON: {r.status_code} body: {r.text[:200]}")
-        data = r.json()
+        queue = r.json()
 
         if verbose: 
             print("--------------------------------")
             print(f"Fetching course {course_id}")
 
-        if not data:
+        if not queue:
             if verbose: print("No outstanding requests")
             ser.write(bytes([0]))  # Send '0' for no requests
             time.sleep(polling_interval_seconds)
             continue
         
-        up_next = data[0]
+        up_next = queue[0]
         if up_next['location'] == "B1":
             if verbose: print("B1 detected")
             ser.write(bytes([1]))  # Send '1' for B1
         else:
             ser.write(bytes([0]))  # Send '0' for not found
         
-        for request in data:
+        for request in queue:
             packet = f"email: {request['requester']['email']}, location: {request['location']}\n"
             # ser.write(packet.encode('utf-8'))
 
