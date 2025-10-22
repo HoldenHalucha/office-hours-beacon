@@ -15,15 +15,15 @@ import requests
 import threading
 
 class Fetcher:
-    def __init__(self, base_station_id: str, max_course: int, cookies_file: str, timing_config: dict):
+    def __init__(self, base_station_id: str, cookies_file: str, configs: dict):
 
         # timing configs
-        self.course_polling_interval_seconds = timing_config['course_polling_interval_seconds'] if 'course_polling_interval_seconds' in timing_config else 1
-        self.course_thread_expiration_seconds = timing_config['course_thread_expiration_seconds'] if 'course_thread_expiration_seconds' in timing_config else 3600
+        self.max_course = configs['max_course'] if 'max_course' in configs else 5
+        self.course_polling_interval_seconds = configs['course_polling_interval_seconds'] if 'course_polling_interval_seconds' in configs else 1
+        self.course_thread_expiration_seconds = configs['course_thread_expiration_seconds'] if 'course_thread_expiration_seconds' in configs else 3600
 
         # data
         self.base_station_id = base_station_id
-        self.max_course = max_course
         self.cookies_file = cookies_file
         self.valid_course_list = [] 
         self.active_course_threads = {}
@@ -58,6 +58,22 @@ class Fetcher:
         
         return self.valid_course_list
     
+    def get_location_from_request(self, request: dict) -> tuple[bool, str]:
+        '''Check if the request belongs to this base station and return the location value'''
+        location = ""
+        try:
+            location = request['location']
+        except KeyError:
+            return False, ""  # 'location' key is missing
+
+        if location == "":
+            return False, ""  # location is empty
+
+        if location[0] == self.base_station_id[0]:  # Compare first character
+            return True, location
+        
+        return False, ""
+    
     def scan_active_courses(self, verbose: bool = False) -> list[int]:
         active_course_list = []
         s = requests.Session()
@@ -74,16 +90,9 @@ class Fetcher:
                 print(f"----------------- scanning course {course_id}---------------") 
 
             for request in queue:
-                location = ""
-                try:
-                    location = request['location']
-                except KeyError:
-                    continue  # Skip if 'location' key is missing
+                valid, location = self.get_location_from_request(request)
 
-                if location == "":
-                    continue  # Skip if location is empty
-
-                if location[0] == self.base_station_id[0]:  # Compare first character
+                if valid:
                     if verbose: print(f"Active course ID: {course_id}, location: {location}\n")
                     active_course_list.append(course_id)
                     break  # No need to check further requests for this course
@@ -107,11 +116,11 @@ class Fetcher:
                 print(f"Fetching course {course_id}")
             
             for request in queue:
-                packet = f"email: {request['requester']['email']}, location: {request['location']}\n"
-                # ser.write(packet.encode('utf-8'))
+                valid, location = self.get_location_from_request(request)
 
-                if verbose:
-                    print(packet)
+                if valid:
+                    last_active_time = time.time()
+                    if verbose: print(f"Base station {self.base_station_id} detected location: {location} in course {course_id}")
             
             time.sleep(polling_interval_seconds)
 
@@ -131,12 +140,12 @@ class Fetcher:
             print("Starting course thread manager...")
             print("Scanning for active courses...")
         
-        active_course_list = self.scan_active_courses()
+        active_course_list = self.scan_active_courses(verbose=verbose)
         if verbose:
             print(f"Active courses found: {active_course_list}")
 
         # if we have reached max threads, do not spawn more threads
-        if len(self.active_course_threads) < self.max_course: 
+        if len(self.active_course_threads) >= self.max_course: 
             if verbose:
                 print(f"we have reached max threads: {self.max_course}, not spawning more threads")
             return
