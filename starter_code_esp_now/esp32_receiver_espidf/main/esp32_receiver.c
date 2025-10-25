@@ -10,11 +10,15 @@
 
 #define LED_PIN 8
 
-//logic is inverted for super-mini boards for low power (probably)
+// logic is inverted for super-mini boards for low power (probably)
 #define LED_LOW 1
 #define LED_HIGH 0
 
-//should hopefully call this when a message is received
+// ESP-NOW/WiFi frequency and listening window
+uint16_t LISTEN_INTERVAL = 10000; //ms
+uint16_t LISTEN_WINDOW = 100; //ms
+
+// should hopefully call this when a message is received
 void esp_now_received(const esp_now_recv_info_t *message_received, const uint8_t *data, int len) {
     gpio_set_level(LED_PIN, LED_HIGH);
     printf("From MAC: ");
@@ -35,25 +39,29 @@ void esp_now_received(const esp_now_recv_info_t *message_received, const uint8_t
 
 
 void app_init(void) {
-    //need this for esp-now
+    // need this for esp-now
     ESP_ERROR_CHECK(nvs_flash_init());
 
-    // Initialize network and event loop
+    // intialize stuff (straight out of an example)
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
     esp_netif_create_default_wifi_sta();
 
-    // Initialize WiFi in station mode
+    // intialize stuff (straight out of an example)
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_start());
 
-    // Initialize ESP-NOW
+    // initialize ESP-NOW
     ESP_ERROR_CHECK(esp_now_init());
 
+    // power saving test 
+    esp_wifi_connectionless_module_set_wake_interval(LISTEN_INTERVAL); // how frequently to check
+    esp_now_set_wake_window(LISTEN_WINDOW); // how long to check
+
     //sanity for me
-    printf("ALL GOOD BOSS!\n");
+    printf("LET'S GET STARTED BOSS!\n");
 
     gpio_reset_pin(LED_PIN);
     gpio_set_direction(LED_PIN, GPIO_MODE_OUTPUT);
