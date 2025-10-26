@@ -4289,6 +4289,12 @@
 		(uuid "c6db9873-1f19-443f-a590-2ad6767ee9ee")
 	)
 	(junction
+		(at 219.71 38.1)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "c821aeaa-4555-4d68-b52f-34be9db85324")
+	)
+	(junction
 		(at 133.35 135.89)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -4445,10 +4451,6 @@
 		(uuid "ada6b7d5-e580-431a-b88b-75524164cf33")
 	)
 	(no_connect
-		(at 175.26 71.12)
-		(uuid "b53503e7-d1c9-4d37-aeb3-92b097ff28e7")
-	)
-	(no_connect
 		(at 73.66 58.42)
 		(uuid "b9cb4a51-8db4-4faf-9e77-7b0962832c7e")
 	)
@@ -4505,6 +4507,16 @@
 			(type default)
 		)
 		(uuid "02df9536-dcd6-4454-87c9-6c24d77e1a61")
+	)
+	(wire
+		(pts
+			(xy 214.63 38.1) (xy 219.71 38.1)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "03748c9a-1093-4ced-add5-33c80ba879ca")
 	)
 	(wire
 		(pts
@@ -4718,7 +4730,7 @@
 	)
 	(wire
 		(pts
-			(xy 175.26 63.5) (xy 153.67 63.5)
+			(xy 175.26 63.5) (xy 144.78 63.5)
 		)
 		(stroke
 			(width 0)
@@ -4748,6 +4760,26 @@
 	)
 	(wire
 		(pts
+			(xy 219.71 38.1) (xy 223.52 38.1)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "25822545-f648-42ce-9f68-ebf57750bfe0")
+	)
+	(wire
+		(pts
+			(xy 162.56 76.2) (xy 162.56 71.12)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "26e859e5-0c12-4089-b656-c9729b3b410d")
+	)
+	(wire
+		(pts
 			(xy 38.1 76.2) (xy 38.1 77.47)
 		)
 		(stroke
@@ -4758,7 +4790,7 @@
 	)
 	(wire
 		(pts
-			(xy 162.56 66.04) (xy 162.56 76.2)
+			(xy 153.67 66.04) (xy 153.67 76.2)
 		)
 		(stroke
 			(width 0)
@@ -5208,6 +5240,16 @@
 	)
 	(wire
 		(pts
+			(xy 162.56 71.12) (xy 175.26 71.12)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "7df18816-7a41-4fcb-8c81-4cba6290bea5")
+	)
+	(wire
+		(pts
 			(xy 63.5 76.2) (xy 63.5 77.47)
 		)
 		(stroke
@@ -5428,7 +5470,7 @@
 	)
 	(wire
 		(pts
-			(xy 175.26 66.04) (xy 162.56 66.04)
+			(xy 175.26 66.04) (xy 153.67 66.04)
 		)
 		(stroke
 			(width 0)
@@ -5548,7 +5590,7 @@
 	)
 	(wire
 		(pts
-			(xy 153.67 63.5) (xy 153.67 76.2)
+			(xy 144.78 63.5) (xy 144.78 76.2)
 		)
 		(stroke
 			(width 0)
@@ -6499,7 +6541,7 @@
 	)
 	(symbol
 		(lib_id "power:+5V")
-		(at 223.52 38.1 90)
+		(at 214.63 38.1 90)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -6508,7 +6550,7 @@
 		(fields_autoplaced yes)
 		(uuid "1cd0d3fa-c11c-4518-89f1-cb603eb38cf8")
 		(property "Reference" "#PWR036"
-			(at 227.33 38.1 0)
+			(at 218.44 38.1 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6517,7 +6559,7 @@
 			)
 		)
 		(property "Value" "+5V"
-			(at 219.71 38.0999 90)
+			(at 210.82 38.0999 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6526,7 +6568,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 223.52 38.1 0)
+			(at 214.63 38.1 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6535,7 +6577,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 223.52 38.1 0)
+			(at 214.63 38.1 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6544,7 +6586,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+5V\""
-			(at 223.52 38.1 0)
+			(at 214.63 38.1 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6629,6 +6671,72 @@
 			(project "OHBeacon"
 				(path "/4e0e7048-b221-4c06-a0a7-7b0ffd7a96a3"
 					(reference "C12")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 162.56 83.82 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "2037452c-685e-4ca9-b042-82377b319c55")
+		(property "Reference" "#PWR045"
+			(at 162.56 90.17 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 162.56 88.9 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 162.56 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 162.56 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 162.56 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "a9a5f1d6-f374-402f-af0e-40409899ff3e")
+		)
+		(instances
+			(project "OHBeacon"
+				(path "/4e0e7048-b221-4c06-a0a7-7b0ffd7a96a3"
+					(reference "#PWR045")
 					(unit 1)
 				)
 			)
@@ -6893,7 +7001,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 162.56 83.82 0)
+		(at 153.67 83.82 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -6902,7 +7010,7 @@
 		(fields_autoplaced yes)
 		(uuid "2337481e-8a8b-44ff-bb3d-150a3dab60c4")
 		(property "Reference" "#PWR039"
-			(at 162.56 90.17 0)
+			(at 153.67 90.17 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6911,7 +7019,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 162.56 88.9 0)
+			(at 153.67 88.9 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6919,7 +7027,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 162.56 83.82 0)
+			(at 153.67 83.82 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6928,7 +7036,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 162.56 83.82 0)
+			(at 153.67 83.82 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -6937,7 +7045,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 162.56 83.82 0)
+			(at 153.67 83.82 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -8351,6 +8459,72 @@
 			(project "OHBeacon"
 				(path "/4e0e7048-b221-4c06-a0a7-7b0ffd7a96a3"
 					(reference "#PWR011")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 219.71 45.72 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "486b3f95-b5db-4ddd-8b0d-e61be7e1c67f")
+		(property "Reference" "#PWR044"
+			(at 219.71 52.07 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 219.71 50.8 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 219.71 45.72 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 219.71 45.72 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 219.71 45.72 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "b16a67bf-1474-49cf-ad8f-381805d06d9d")
+		)
+		(instances
+			(project "OHBeacon"
+				(path "/4e0e7048-b221-4c06-a0a7-7b0ffd7a96a3"
+					(reference "#PWR044")
 					(unit 1)
 				)
 			)
@@ -10027,6 +10201,76 @@
 			(project "OHBeacon"
 				(path "/4e0e7048-b221-4c06-a0a7-7b0ffd7a96a3"
 					(reference "J6")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 219.71 41.91 180)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "82c06c5e-7122-40fa-a95e-d2cb3644ecd4")
+		(property "Reference" "R10"
+			(at 222.25 40.6399 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" "100k"
+			(at 222.25 43.1799 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
+			(at 221.488 41.91 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 219.71 41.91 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Resistor"
+			(at 219.71 41.91 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "8fef1e73-56ab-4281-9205-b529b21593f7")
+		)
+		(pin "1"
+			(uuid "5fa24bc1-ffa9-4f7c-ac86-fd827005e5aa")
+		)
+		(instances
+			(project "OHBeacon"
+				(path "/4e0e7048-b221-4c06-a0a7-7b0ffd7a96a3"
+					(reference "R10")
 					(unit 1)
 				)
 			)
@@ -11845,7 +12089,7 @@
 	)
 	(symbol
 		(lib_id "Device:R")
-		(at 153.67 80.01 180)
+		(at 144.78 80.01 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -11854,7 +12098,7 @@
 		(fields_autoplaced yes)
 		(uuid "c9a0cbfd-386d-43cb-be6a-a087e7e8d390")
 		(property "Reference" "R6"
-			(at 156.21 78.7399 0)
+			(at 147.32 78.7399 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -11863,7 +12107,7 @@
 			)
 		)
 		(property "Value" "100k"
-			(at 156.21 81.2799 0)
+			(at 147.32 81.2799 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -11872,7 +12116,7 @@
 			)
 		)
 		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
-			(at 155.448 80.01 90)
+			(at 146.558 80.01 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -11881,7 +12125,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 153.67 80.01 0)
+			(at 144.78 80.01 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -11890,7 +12134,7 @@
 			)
 		)
 		(property "Description" "Resistor"
-			(at 153.67 80.01 0)
+			(at 144.78 80.01 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12044,6 +12288,76 @@
 			(project "OHBeacon"
 				(path "/4e0e7048-b221-4c06-a0a7-7b0ffd7a96a3"
 					(reference "C6")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Device:R")
+		(at 162.56 80.01 180)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "d128dd60-5285-40f7-ad44-2fe0f5cd6a8b")
+		(property "Reference" "R11"
+			(at 165.1 78.7399 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Value" "0"
+			(at 165.1 81.2799 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
+			(at 164.338 80.01 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 162.56 80.01 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Resistor"
+			(at 162.56 80.01 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "2"
+			(uuid "985028c5-51e9-48a8-a578-467bf3e06e6f")
+		)
+		(pin "1"
+			(uuid "90f629da-4088-414a-b087-56c21d9080ef")
+		)
+		(instances
+			(project "OHBeacon"
+				(path "/4e0e7048-b221-4c06-a0a7-7b0ffd7a96a3"
+					(reference "R11")
 					(unit 1)
 				)
 			)
@@ -12883,7 +13197,7 @@
 	)
 	(symbol
 		(lib_id "Device:R")
-		(at 162.56 80.01 180)
+		(at 153.67 80.01 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -12892,7 +13206,7 @@
 		(fields_autoplaced yes)
 		(uuid "f4bf3483-6802-45e7-93e8-62ba8f5e0ac0")
 		(property "Reference" "R7"
-			(at 165.1 78.7399 0)
+			(at 156.21 78.7399 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12901,7 +13215,7 @@
 			)
 		)
 		(property "Value" "100k"
-			(at 165.1 81.2799 0)
+			(at 156.21 81.2799 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12910,7 +13224,7 @@
 			)
 		)
 		(property "Footprint" "Resistor_SMD:R_0603_1608Metric"
-			(at 164.338 80.01 90)
+			(at 155.448 80.01 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12919,7 +13233,7 @@
 			)
 		)
 		(property "Datasheet" "~"
-			(at 162.56 80.01 0)
+			(at 153.67 80.01 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12928,7 +13242,7 @@
 			)
 		)
 		(property "Description" "Resistor"
-			(at 162.56 80.01 0)
+			(at 153.67 80.01 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12953,7 +13267,7 @@
 	)
 	(symbol
 		(lib_id "power:+5V")
-		(at 153.67 83.82 180)
+		(at 144.78 83.82 180)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -12962,7 +13276,7 @@
 		(fields_autoplaced yes)
 		(uuid "f558ecb8-6d7b-4955-8d12-b042585403ec")
 		(property "Reference" "#PWR031"
-			(at 153.67 80.01 0)
+			(at 144.78 80.01 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12971,7 +13285,7 @@
 			)
 		)
 		(property "Value" "+5V"
-			(at 153.67 88.9 0)
+			(at 144.78 88.9 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12979,7 +13293,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 153.67 83.82 0)
+			(at 144.78 83.82 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12988,7 +13302,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 153.67 83.82 0)
+			(at 144.78 83.82 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -12997,7 +13311,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+5V\""
-			(at 153.67 83.82 0)
+			(at 144.78 83.82 0)
 			(effects
 				(font
 					(size 1.27 1.27)
