@@ -13,6 +13,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import requests
 import threading
+import math
 
 class Fetcher:
     def __init__(self, base_station_id: str, cookies_file: str, configs: dict):
@@ -34,6 +35,15 @@ class Fetcher:
         # serial interface
         self.serial_event_lock = threading.Lock()
         self.serial_events = []
+
+    def get_course_color(self) -> list[int]:
+        offset = (len(self.active_course_threads)) / self.max_course * 360  # degrees
+        print(f"Course color offset: {offset} degrees")
+        r = int((math.sin(math.radians(offset + 0)) + 1) / 2 * 255)
+        g = int((math.sin(math.radians(offset + 120)) + 1) / 2 * 255)
+        b = int((math.sin(math.radians(offset + 240)) + 1) / 2 * 255)
+
+        return [r, g, b]
 
     def load_cookies_into_session(self, session):
 
@@ -103,7 +113,7 @@ class Fetcher:
 
         return active_course_list
     
-    def course_thread(self, course_id, polling_interval_seconds, expiration_seconds, verbose=False):
+    def course_thread(self, course_id, course_color, verbose=False):
         s = requests.Session()
         s = self.load_cookies_into_session(s)
         json_url = f"https://oh.eecs.umich.edu/course_queues/{course_id}/outstanding_requests.json"
@@ -111,7 +121,7 @@ class Fetcher:
         queued_beacons = {}
 
         last_active_time = time.time()
-        while (time.time() - last_active_time < expiration_seconds) and self.running:
+        while (time.time() - last_active_time < self.course_thread_expiration_seconds) and self.running:
             r = s.get(json_url, timeout=20)
             if r.status_code != 200:
                 raise RuntimeError(f"Failed to fetch JSON: {r.status_code} body: {r.text[:200]}")
@@ -135,7 +145,8 @@ class Fetcher:
                         with self.serial_event_lock:
                             event = {
                                 'beacon_id': beacon_id,
-                                'queue_position': queue_position
+                                'queue_position': queue_position,
+                                'course_color': course_color
                             }
                             self.serial_events.append(event)
 
@@ -150,21 +161,22 @@ class Fetcher:
                     with self.serial_event_lock:
                         event = {
                             'beacon_id': beacon_id,
-                            'queue_position': -1  # Indicate removal from queue
+                            'queue_position': -1,  # Indicate removal from queue
+                            'course_color': course_color
                         }
                         self.serial_events.append(event)
                     if verbose: print(f"Base station {self.base_station_id} detected beacon_id: {beacon_id} removed from course {course_id}")
             
-            time.sleep(polling_interval_seconds)
+            time.sleep(self.course_polling_interval_seconds)
 
         if verbose:
-            print(f"Course {course_id} thread expired after {expiration_seconds} seconds.")
+            print(f"Course {course_id} thread expired after {self.course_thread_expiration_seconds} seconds.")
             del self.active_course_threads[course_id]
     
-    def spawn_course_thread(self, course_id, expiration_seconds=3600, verbose=False):
+    def spawn_course_thread(self, course_id, verbose=False):
         if verbose:
             print(f"Spawning thread for course {course_id}...")
-        t = threading.Thread(target=self.course_thread, args=(course_id, self.course_polling_interval_seconds, expiration_seconds, verbose))
+        t = threading.Thread(target=self.course_thread, args=(course_id, self.get_course_color(), verbose))
         t.start()
         self.active_course_threads[course_id] = t
 
@@ -187,7 +199,7 @@ class Fetcher:
                 for course_id in active_course_list:
                     # If no thread exists for this active course, spawn one
                     if course_id not in self.active_course_threads:
-                        self.spawn_course_thread(course_id, expiration_seconds=self.course_thread_expiration_seconds, verbose=verbose)
+                        self.spawn_course_thread(course_id, verbose=verbose)
 
             else:
                 if verbose:
