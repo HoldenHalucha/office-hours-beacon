@@ -187,25 +187,25 @@ class Fetcher:
         
         while self.running:
             # if we have reached max threads, do not spawn more threads
-            if len(self.active_course_threads) < self.max_course: 
-                if verbose:
-                    print("Scanning for active courses...")
+            
+            if verbose:
+                print("Scanning for active courses...")
 
-                active_course_list = self.scan_active_courses(verbose=verbose)
-                if verbose:
-                    print(f"Active courses found: {active_course_list}")
-                
+            active_course_list = self.scan_active_courses(verbose=verbose)
+            if verbose:
+                print(f"Active courses found: {active_course_list}")
+            
 
-                for course_id in active_course_list:
-                    # If no thread exists for this active course, spawn one
-                    if course_id not in self.active_course_threads:
-                        self.spawn_course_thread(course_id, verbose=verbose)
-
-            else:
-                if verbose:
+            for course_id in active_course_list:
+                if len(self.active_course_threads) >= self.max_course:
                     print(f"we have reached max threads: {self.max_course}, not spawning more threads")
+                    break
 
+                # If no thread exists for this active course, spawn one
+                if course_id not in self.active_course_threads:
+                    self.spawn_course_thread(course_id, verbose=verbose)
             time.sleep(self.active_course_scan_interval_seconds)
+
 
 
     def start_course_thread_manager(self, verbose=False):

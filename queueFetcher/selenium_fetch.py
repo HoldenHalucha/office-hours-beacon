@@ -57,7 +57,7 @@ def interactive_login_and_save_cookies(login_url):
 if __name__ == "__main__":
 
     fetcher_configs = {
-        'max_course': 1,
+        'max_course': 2,
         'course_polling_interval_seconds': 2,
         'course_thread_expiration_seconds': 10,
         'active_course_scan_interval_seconds': 5
@@ -75,9 +75,14 @@ if __name__ == "__main__":
         while True:
             time.sleep(2)
             events = fetcher.get_serial_events()
+
+            message = "S"
             for event in events:
-                print(f"Serial Event: {event}")
-                ser.write((event + '\n').encode('utf-8'))
+                message += f"#{event['beacon_id']}%{event['queue_position']}%{event['course_color']}"
+            message += "Z"
+             
+            print(f"Sending serial message: {message}")
+            ser.write(message.encode('ascii'))
 
     except KeyboardInterrupt:
         print("Stopping fetcher...")
