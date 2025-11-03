@@ -16,7 +16,7 @@
 
 // ESP-NOW/WiFi frequency and listening window
 uint16_t LISTEN_INTERVAL = 10000; //ms
-uint16_t LISTEN_WINDOW = 100; //ms
+uint16_t LISTEN_WINDOW = 500; //ms
 
 // should hopefully call this when a message is received
 void esp_now_received(const esp_now_recv_info_t *message_received, const uint8_t *data, int len) {
