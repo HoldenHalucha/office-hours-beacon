@@ -76,13 +76,12 @@ if __name__ == "__main__":
             time.sleep(2)
             events = fetcher.get_serial_events()
 
-            message = "S"
             for event in events:
-                message += f"#{event['beacon_id']}%{event['queue_position']}%{event['course_color']}"
-            message += "Z"
+                message = f"S{event['beacon_id']}%{event['queue_position']}%{event['course_color']}Z"
+                print(f"Sending serial message: {message}")
+                ser.write(message.encode('ascii'))
+                time.sleep(0.1)  # brief pause between messages
              
-            print(f"Sending serial message: {message}")
-            ser.write(message.encode('ascii'))
 
     except KeyboardInterrupt:
         print("Stopping fetcher...")

@@ -13,11 +13,11 @@ GPIO.output(ESP_SELECT, GPIO.LOW)
 
 uart = serial.Serial('/dev/serial0', baudrate=9600, timeout=1)
 
-time.sleep(1);
+time.sleep(1)
 
 GPIO.output(ESP_SELECT, GPIO.HIGH)
 
-time.sleep(1);
+time.sleep(1)
 
 with open('mac_addresses.txt', 'r') as file:
     line_count = sum(1 for _ in file)

@@ -45,14 +45,19 @@ if __name__ == "__main__":
 
     fetcher.valid_course_list = valid_course_list
 
-    fetcher.start_course_thread_manager(verbose=True)
+    fetcher.start_course_thread_manager(verbose=False)
 
     try:
         while True:
             time.sleep(2)
             events = fetcher.get_serial_events()
+
+            message = "S"
             for event in events:
-                print(f"Serial Event: {event}")
+                message += f"#{event['beacon_id']}%{event['queue_position']}%{event['course_color']}"
+            message += "Z"
+            
+            print(message)
 
     except KeyboardInterrupt:
         print("Stopping fetcher...")
