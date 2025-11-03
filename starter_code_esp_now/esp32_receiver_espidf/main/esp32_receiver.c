@@ -18,6 +18,16 @@
 uint16_t LISTEN_INTERVAL = 10000; //ms
 uint16_t LISTEN_WINDOW = 500; //ms
 
+// Global state for latest command
+typedef struct {
+    int position;
+    uint8_t r;
+    uint8_t g;
+    uint8_t b;
+} receiver_state_t;
+
+static receiver_state_t g_state = {0, 0, 0, 0};
+
 // should hopefully call this when a message is received
 void esp_now_received(const esp_now_recv_info_t *message_received, const uint8_t *data, int len) {
     gpio_set_level(LED_PIN, LED_HIGH);
@@ -25,14 +35,29 @@ void esp_now_received(const esp_now_recv_info_t *message_received, const uint8_t
     for (int i = 0; i < 6; i++) printf("%02X", message_received->src_addr[i]);
     printf(" | Length: %d | RSSI: %d\n", len, message_received->rx_ctrl->rssi);
 
-    printf("Data: ");
-    char c;
-    for (int i = 0; i < len; i++) {
-        c = data[i];
-        printf("%c", c);
+    // Expect payload like: "pos|r,g,b"
+    int pos = 0, r = 0, g = 0, b = 0;
+    if (len > 0) {
+        // Ensure null-terminated temporary buffer for parsing
+        char buf[64];
+        int copyLen = len < (int)sizeof(buf) - 1 ? len : (int)sizeof(buf) - 1;
+        for (int i = 0; i < copyLen; ++i) buf[i] = (char)data[i];
+        buf[copyLen] = '\0';
+
+        int matched = sscanf(buf, "%d|%d,%d,%d", &pos, &r, &g, &b);
+        if (matched == 4) {
+            if (r < 0) r = 0; if (r > 255) r = 255;
+            if (g < 0) g = 0; if (g > 255) g = 255;
+            if (b < 0) b = 0; if (b > 255) b = 255;
+            g_state.position = pos;
+            g_state.r = (uint8_t)r;
+            g_state.g = (uint8_t)g;
+            g_state.b = (uint8_t)b;
+            printf("Saved state -> pos:%d rgb:[%u,%u,%u]\n", g_state.position, g_state.r, g_state.g, g_state.b);
+        } else {
+            printf("Unexpected payload format: %s\n", buf);
+        }
     }
-    
-    printf("\n");
 
     gpio_set_level(LED_PIN, LED_LOW);
 }

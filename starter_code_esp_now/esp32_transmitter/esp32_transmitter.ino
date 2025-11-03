@@ -7,14 +7,101 @@
 #define RXD2 16
 #define TXD2 17
 
+#define NAME_LEN 4
+#define NAME_SENTINEL '_'
+
 struct Beacon{
-  char name[4];
+  char name[NAME_LEN];
   uint8_t address[6];
 };
 
 int beacons_read = 0;
 
 Beacon beacons[MAX_BEACONS];
+
+// Normalize a raw 1-4 char name into fixed 4 chars padded with sentinel
+static void packNameWithSentinel(const char *src4, char *dest4) {
+  // Determine effective length (contiguous alnum prefix up to 4)
+  int effectiveLen = 0;
+  for (int i = 0; i < NAME_LEN; ++i) {
+    char c = src4[i];
+    if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')) {
+      effectiveLen++;
+    } else {
+      break;
+    }
+  }
+  for (int i = 0; i < NAME_LEN; ++i) {
+    if (i < effectiveLen) dest4[i] = src4[i]; else dest4[i] = NAME_SENTINEL;
+  }
+}
+
+// Find index of beacon by 4-char device name, returns -1 if not found
+int findBeaconIndexByName(const char *deviceName) {
+  for (int i = 0; i < beacons_read; ++i) {
+    bool match = true;
+    for (int j = 0; j < NAME_LEN; ++j) {
+      if (beacons[i].name[j] != deviceName[j]) { match = false; break; }
+    }
+    if (match)
+      return i;
+  }
+  return -1;
+}
+
+// Parse command of format: S{device_name}%{position}%{[r,g,b]}Z
+// On success, fills deviceName(4 chars, not null-terminated), position, r,g,b and returns true
+bool parseCommand(const char *cmd, size_t len, char *deviceNameOut, int &positionOut, int &rOut, int &gOut, int &bOut) {
+  if (len < 10) return false; // minimal sanity
+  if (cmd[0] != 'S' || cmd[len - 1] != 'Z') return false;
+
+  // Extract inside without S ... Z
+  String body;
+  body.reserve(len);
+  for (size_t i = 1; i + 1 < len; ++i) body += cmd[i];
+
+  // Expected: NAME%POS%[r,g,b]
+  int firstPct = body.indexOf('%');
+  int secondPct = body.indexOf('%', firstPct + 1);
+  if (firstPct <= 0 || secondPct <= firstPct + 1) return false;
+
+  String name = body.substring(0, firstPct);
+  String posStr = body.substring(firstPct + 1, secondPct);
+  String colorStr = body.substring(secondPct + 1);
+
+  if (name.length() < 1 || name.length() > 4) return false;
+  // pack into fixed length with sentinel padding
+  char raw4[NAME_LEN] = { NAME_SENTINEL, NAME_SENTINEL, NAME_SENTINEL, NAME_SENTINEL };
+  for (int i = 0; i < name.length(); ++i) raw4[i] = name[i];
+  packNameWithSentinel(raw4, deviceNameOut);
+
+  positionOut = posStr.toInt();
+
+  // colorStr like [r,g,b]
+  int lb = colorStr.indexOf('[');
+  int rb = colorStr.indexOf(']');
+  if (lb == -1 || rb == -1 || rb <= lb + 1) return false;
+  String inside = colorStr.substring(lb + 1, rb);
+
+  // split by commas
+  int c1 = inside.indexOf(',');
+  int c2 = inside.indexOf(',', c1 + 1);
+  if (c1 == -1 || c2 == -1) return false;
+  String rStr = inside.substring(0, c1);
+  String gStr = inside.substring(c1 + 1, c2);
+  String bStr = inside.substring(c2 + 1);
+
+  rOut = rStr.toInt();
+  gOut = gStr.toInt();
+  bOut = bStr.toInt();
+
+  // clamp to 0-255
+  rOut = constrain(rOut, 0, 255);
+  gOut = constrain(gOut, 0, 255);
+  bOut = constrain(bOut, 0, 255);
+
+  return true;
+}
 
 void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
   char macStr[18];
@@ -55,10 +142,10 @@ void setup() {
       
       Serial2.readBytes(text, 18);
 
-      for(int i = 0; i < 4; ++i) {
+      for(int i = 0; i < NAME_LEN; ++i) {
         name[i] = text[i];
       }
-      name[4] = '\0';
+      name[NAME_LEN] = '\0';
 
       int mac_ind = 0;
       for (int i = 5; i < 17; i += 2) {
@@ -67,7 +154,7 @@ void setup() {
       }
 
       
-      Serial.printf("Name: %s\n", name);
+      Serial.printf("Name (raw): %s\n", name);
 
       Serial.print("MAC: ");
       for (int i = 0; i < 6; ++i) {
@@ -77,10 +164,8 @@ void setup() {
       Serial.print("\n\n");
 
       
-      // Add to the array of beacons
-      for(int i = 0; i < 4; ++i) {
-        temp.name[i] = name[i];
-      }     
+      // Add to the array of beacons (normalize to sentinel-padded)
+      packNameWithSentinel(name, temp.name);
 
       for(int i = 0; i < 6; ++i) {
         temp.address[i] = mac[i];
@@ -118,24 +203,51 @@ void setup() {
 }
 
 void loop() {
-  
-  const char *message = "hello receivers";
-  for (int i = 0; i < beacons_read; i++) {
-    esp_err_t result = esp_now_send(beacons[i].address, (uint8_t *)message, strlen(message) + 1);
-    if (result == ESP_OK) {
-      Serial.printf("Message sent to receiver %d\n", i + 1);
+  // Read UART for commands: S{name}%{position}%{[r,g,b]}Z
+  static char buffer[128];
+  static size_t idx = 0;
+
+  while (Serial2.available() > 0) {
+    char c = (char)Serial2.read();
+    if (idx == 0) {
+      if (c != 'S') continue; // wait for start
+      buffer[idx++] = c;
     } else {
-      Serial.printf("Error sending to receiver %d\n", i + 1);
+      buffer[idx++] = c;
+      if (idx >= sizeof(buffer)) idx = 0; // overflow guard
+      if (c == 'Z') {
+        // process command in buffer[0..idx-1]
+        char deviceName[4];
+        int position, r, g, b;
+        if (parseCommand(buffer, idx, deviceName, position, r, g, b)) {
+          int beaconIndex = findBeaconIndexByName(deviceName);
+          if (beaconIndex >= 0) {
+            // Format payload: "pos|r,g,b"
+            char payload[32];
+            int n = snprintf(payload, sizeof(payload), "%d|%d,%d,%d", position, r, g, b);
+            if (n > 0) {
+              esp_err_t result = esp_now_send(beacons[beaconIndex].address, (uint8_t *)payload, (size_t)n);
+              if (result == ESP_OK) {
+                Serial.print("Sent payload to ");
+                for (int i = 0; i < 4; ++i) Serial.print(beacons[beaconIndex].name[i]);
+                Serial.print(": ");
+                Serial.println(payload);
+              } else {
+                Serial.println("ESP-NOW send error");
+              }
+            }
+          } else {
+            Serial.print("Unknown device name: ");
+            for (int i = 0; i < 4; ++i) Serial.print(deviceName[i]);
+            Serial.println();
+          }
+        } else {
+          Serial.println("Invalid command format");
+        }
+        idx = 0; // reset for next command
+      }
     }
   }
-  
-  delay(50);
-  
-  /*/
-  for(int i = 0; i < beacons_read; ++i) {
-    Serial.println(beacons[i].name);
 
-    delay(3000);
-  }
-  */
+  delay(5);
 }
