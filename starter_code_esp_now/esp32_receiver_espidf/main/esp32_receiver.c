@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include "driver/gpio.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -18,6 +19,49 @@
 uint16_t LISTEN_INTERVAL = 10000; //ms
 uint16_t LISTEN_WINDOW = 100; //ms
 
+#define MAX_BEACONS 10
+
+typedef struct {
+    char device_name[10];
+    int position;
+    int r, g, b;
+    bool valid;
+} BeaconInfo;
+
+BeaconInfo beacon_list[MAX_BEACONS] = {0};
+
+// REQUIRES: No S or Z in data
+// MODIFIES: BeaconInfo struct
+// EFFECTS: Decodes ONE valid message from string and places it in struct
+//          Message must be in form S#dev_name#mac_add#color#pos#Z
+bool decodeMessage(const char *msg, BeaconInfo beacons[], int maxBeacons) {
+    if (!msg || msg[0] != 'S')
+        return false;
+
+    char buffer[256];
+    strncpy(buffer, msg, sizeof(buffer));
+    buffer[255] = '\0';
+
+    char *start = buffer + 1; // One past S
+    char *end = strchr(start, 'Z'); // One before Z
+    if (end) *end = '\0';
+
+    // Example: A10%0%[127,237,17]
+    char *pos1 = strchr(start, '%');
+    if (!pos1) return false;
+    *pos1 = '\0';
+    strncpy(b->device_name, start, sizeof(b->device_name) - 1);
+
+    char *pos2 = strchr(pos1 + 1, '%');
+    if (!pos2) return false;
+    *pos2 = '\0';
+    b->position = atoi(pos1 + 1);
+
+    sscanf(pos2 + 1, "[%d,%d,%d]", &b->r, &b->g, &b->b);
+    b->valid = true;
+    return true;
+}
+
 // should hopefully call this when a message is received
 void esp_now_received(const esp_now_recv_info_t *message_received, const uint8_t *data, int len) {
     gpio_set_level(LED_PIN, LED_HIGH);
@@ -33,6 +77,24 @@ void esp_now_received(const esp_now_recv_info_t *message_received, const uint8_t
     }
     
     printf("\n");
+
+    // Decode packet
+    BeaconInfo beacons[MAX_BEACONS];
+    char msg[256];
+    if (len < 128) {
+        char msg[128];
+        memcpy(msg, data, len);
+        msg[len] = '\0';
+
+        if (decodeSingleBeacon(msg, &temp)) {
+            // Save it to global list, indexed by position
+            if (temp.position >= 0 && temp.position < MAX_BEACONS) {
+                beacon_list[temp.position] = temp;
+                printf("Saved Beacon %s at pos %d RGB(%d,%d,%d)\n",
+                       temp.device_name, temp.position, temp.r, temp.g, temp.b);
+            }
+        }
+    }
 
     gpio_set_level(LED_PIN, LED_LOW);
 }
