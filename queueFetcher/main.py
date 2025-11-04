@@ -8,8 +8,6 @@ export cookies, then fetch the JSON and save it.
 import os
 import time
 import json
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 from fetcher import Fetcher
 import serial
 
@@ -28,29 +26,6 @@ ser = serial.Serial(
     baudrate=9600,
     timeout=1
 )
-
-def get_driver(headless=True):
-    opts = Options()
-    if headless:
-        opts.add_argument("--headless=new")
-    opts.add_argument("--no-sandbox")
-    opts.add_argument("--disable-gpu")
-    opts.add_argument("--window-size=1920,1080")
-    # Path to chromedriver must be on PATH or specify executable_path
-    driver = webdriver.Chrome(options=opts)
-    return driver
-
-def interactive_login_and_save_cookies(login_url):
-    driver = get_driver(headless=False)  # visible so you can do 2FA
-    driver.get(login_url)
-    print("Please sign in interactively in the browser window. Waiting 90 seconds...")
-    # You can increase wait time here if you need 2FA or manual approvals.
-    time.sleep(90)
-    cookies = driver.get_cookies()
-    with open(COOKIES_FILE, "w") as f:
-        json.dump(cookies, f)
-    print(f"Saved {len(cookies)} cookies to {COOKIES_FILE}")
-    driver.quit()
 
 
 

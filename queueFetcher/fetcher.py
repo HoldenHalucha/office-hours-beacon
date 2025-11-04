@@ -56,6 +56,7 @@ class Fetcher:
         return session
 
     def scan_valid_courses(self, max_id=1000, verbose=False) -> list[int]:
+        '''This function is deprecated. Use get_valid_courses() instead.'''
         self.valid_course_list = []
         s = requests.Session()
         s = self.load_cookies_into_session(s)
@@ -71,6 +72,22 @@ class Fetcher:
                 if verbose: print(f"Invalid course ID: {course_id} status: {r.status_code}")
         
         return self.valid_course_list
+    
+    def get_valid_courses(self, verbose=False) -> list[str]:
+        self.valid_course_list = []
+        s = requests.Session()
+        s = self.load_cookies_into_session(s)
+
+        url = "https://eecsoh.eecs.umich.edu/api/courses"
+        r = s.get(url, timeout=20)
+        courses = r.json()
+
+        for course in courses:
+            if verbose:
+                print(f"Course ID: {course['id']}, Name: {course['short_name']}")
+            for queue in course["queues"]:
+                if verbose: print(f"    {queue["id"]}")
+                self.valid_course_list.append(queue["id"])
     
     def get_location_from_request(self, request: dict) -> tuple[bool, str]:
         '''Check if the request belongs to this base station and return the location value'''
@@ -94,16 +111,16 @@ class Fetcher:
         s = self.load_cookies_into_session(s)
 
         for course_id in self.valid_course_list:
-            json_url = f"https://oh.eecs.umich.edu/course_queues/{course_id}/outstanding_requests.json"
+            json_url = f"https://eecsoh.eecs.umich.edu/api/queues/{course_id}"
             r = s.get(json_url, timeout=20)
 
-            queue = r.json()
-            if not queue: continue  # No requests for current course
+            session = r.json()
+            if not session: continue  # No requests for current course
 
             if verbose:
                 print(f"----------------- scanning course {course_id}---------------") 
 
-            for request in queue:
+            for request in session["queue"]:
                 valid, location = self.get_location_from_request(request)
 
                 if valid:
@@ -116,7 +133,7 @@ class Fetcher:
     def course_thread(self, course_id, course_color, verbose=False):
         s = requests.Session()
         s = self.load_cookies_into_session(s)
-        json_url = f"https://oh.eecs.umich.edu/course_queues/{course_id}/outstanding_requests.json"
+        json_url = f"https://eecsoh.eecs.umich.edu/api/queues/{course_id}"
 
         queued_beacons = {}
 
@@ -125,14 +142,14 @@ class Fetcher:
             r = s.get(json_url, timeout=20)
             if r.status_code != 200:
                 raise RuntimeError(f"Failed to fetch JSON: {r.status_code} body: {r.text[:200]}")
-            queue = r.json()
+            session = r.json()
 
             if verbose: 
                 print("--------------------------------")
                 print(f"Fetching course {course_id}")
             
             current_queued_beacon_id = []
-            for queue_position, request in enumerate(queue):
+            for queue_position, request in enumerate(session["queue"]):
                 valid, beacon_id = self.get_location_from_request(request)
 
                 if valid:
@@ -191,7 +208,7 @@ class Fetcher:
             if verbose:
                 print("Scanning for active courses...")
 
-            active_course_list = self.scan_active_courses(verbose=verbose)
+            active_course_list = self.scan_active_courses()
             if verbose:
                 print(f"Active courses found: {active_course_list}")
             
