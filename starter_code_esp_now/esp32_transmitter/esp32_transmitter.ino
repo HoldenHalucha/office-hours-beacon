@@ -131,7 +131,11 @@ void setup() {
 
   Beacon temp;
 
-  while(digitalRead(uart_select_pin)) {
+  while(!Serial2.available()){
+    //do nothing
+  }
+  
+  while(Serial2.available()) {
     //Serial.println("made it here first");
     //Serial.println(Serial.available());
 
@@ -172,8 +176,11 @@ void setup() {
       }
 
       beacons[beacons_read - 1] = temp;
+
+      delay(250);
       
     }
+    
   }
 
   delay(500);
@@ -199,6 +206,7 @@ void setup() {
       Serial.println(i + 1);
     }
   }
+  
 
 }
 
