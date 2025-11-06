@@ -7,9 +7,6 @@ from fetcher import Fetcher
 import os
 import time
 from functools import wraps
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-import json
 
 BASE_STATION_ID = "A"
 
@@ -29,62 +26,38 @@ def timeit(func):
 
 fetcher_configs = {
     'max_course': 2,
-    'course_polling_interval_seconds': 1,
+    'course_polling_interval_seconds': 2,
     'course_thread_expiration_seconds': 10,
-    'active_course_scan_interval_seconds': 2
+    'active_course_scan_interval_seconds': 5
 }
 
-def get_driver(headless=True):
-    opts = Options()
-    if headless:
-        opts.add_argument("--headless=new")
-    opts.add_argument("--no-sandbox")
-    opts.add_argument("--disable-gpu")
-    opts.add_argument("--window-size=1920,1080")
-    # Path to chromedriver must be on PATH or specify executable_path
-    driver = webdriver.Chrome(options=opts)
-    return driver
-
-def interactive_login_and_save_cookies(login_url):
-    driver = get_driver(headless=False)  # visible so you can do 2FA
-    driver.get(login_url)
-    print("Please sign in interactively in the browser window. Waiting 90 seconds...")
-    # You can increase wait time here if you need 2FA or manual approvals.
-    time.sleep(90)
-    cookies = driver.get_cookies()
-    with open(COOKIES_FILE, "w") as f:
-        json.dump(cookies, f)
-    print(f"Saved {len(cookies)} cookies to {COOKIES_FILE}")
-    driver.quit()
-
-def test_fetcher():
+if __name__ == "__main__":
+    # Step 1: if you don't have cookies yet, run interactive login once:
+    if not os.path.exists(COOKIES_FILE):
+        print("Cookie files not found. Exiting...")
+        exit(1)
+    
     fetcher = Fetcher(BASE_STATION_ID, COOKIES_FILE, configs=fetcher_configs)
 
+    # Precomputed valid course IDs. This list would change if new courses are added to OH queue.
+    valid_course_list = [808, 815, 816, 820, 823, 825, 826, 827, 829, 830, 833, 834, 839, 850, 856, 864, 866, 868, 869, 877, 878, 880, 881, 882, 883, 884, 887, 889, 890, 893, 894, 895, 896, 897, 898, 899, 900, 901, 902, 904, 905, 906, 907, 908, 909, 910, 911, 913, 916, 917, 918, 919]
 
-    fetcher.get_valid_courses()
-    fetcher.start_course_thread_manager(verbose=True)
+    fetcher.valid_course_list = valid_course_list
+
+    fetcher.start_course_thread_manager(verbose=False)
 
     try:
         while True:
             time.sleep(2)
             events = fetcher.get_serial_events()
 
+            message = "S"
             for event in events:
-                message = f"S{event['beacon_id']}%{event['queue_position']}%{event['course_color']}Z"
-                print(message)       
+                message += f"#{event['beacon_id']}%{event['queue_position']}%{event['course_color']}"
+            message += "Z"
             
+            print(message)
 
-    except:
+    except KeyboardInterrupt:
         print("Stopping fetcher...")
         fetcher.running = False
-
-def get_cookies():
-    interactive_login_and_save_cookies("https://eecsoh.eecs.umich.edu/")
-
-if __name__ == "__main__":
-    
-    # fetcher = Fetcher(BASE_STATION_ID, COOKIES_FILE, configs=fetcher_configs)
-    # fetcher.get_valid_courses(verbose=True)
-    # fetcher.scan_active_courses(verbose=True)
-
-    test_fetcher()
