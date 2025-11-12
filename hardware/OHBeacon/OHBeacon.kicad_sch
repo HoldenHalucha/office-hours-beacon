@@ -4375,16 +4375,6 @@
 	)
 	(wire
 		(pts
-			(xy 31.75 152.4) (xy 31.75 151.13)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "309b905f-e325-4dc8-8cfe-32ded02bbbea")
-	)
-	(wire
-		(pts
 			(xy 69.85 135.89) (xy 69.85 144.78)
 		)
 		(stroke
@@ -5035,16 +5025,6 @@
 	)
 	(wire
 		(pts
-			(xy 123.19 101.6) (xy 123.19 104.14)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "c0b0d00c-be39-4ce1-95ee-3efe5cb5be06")
-	)
-	(wire
-		(pts
 			(xy 31.75 135.89) (xy 44.45 135.89)
 		)
 		(stroke
@@ -5112,6 +5092,16 @@
 			(type default)
 		)
 		(uuid "d3a9cf64-a28b-48e5-9025-8d514d99d071")
+	)
+	(wire
+		(pts
+			(xy 31.75 151.13) (xy 31.75 152.4)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d721cbb1-6ee9-4a26-a16f-7f8645070b38")
 	)
 	(wire
 		(pts
@@ -5255,6 +5245,16 @@
 	)
 	(wire
 		(pts
+			(xy 123.19 104.14) (xy 123.19 101.6)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f6ec7021-7f8e-4028-81b6-d802e9b972a2")
+	)
+	(wire
+		(pts
 			(xy 110.49 54.61) (xy 114.3 54.61)
 		)
 		(stroke
@@ -5313,7 +5313,7 @@
 		)
 		(uuid "0819f985-4c09-41a2-b76e-46c8ab0c5517")
 	)
-	(label "BATT_VCC"
+	(label "LED_VCC"
 		(at 107.95 173.99 0)
 		(effects
 			(font
@@ -5343,7 +5343,7 @@
 		)
 		(uuid "1ffde469-0dfe-4315-aa27-e0208edbaf06")
 	)
-	(label "BATT_VCC"
+	(label "LED_VCC"
 		(at 107.95 135.89 0)
 		(effects
 			(font
@@ -5463,8 +5463,8 @@
 		)
 		(uuid "e21e88cc-ca33-4a97-a23b-bf0751efbf25")
 	)
-	(label "BATT_VCC"
-		(at 123.19 101.6 0)
+	(label "LED_VCC"
+		(at 123.19 104.14 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -5883,72 +5883,6 @@
 			(project "OHBeacon"
 				(path "/4e0e7048-b221-4c06-a0a7-7b0ffd7a96a3"
 					(reference "#PWR07")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:+3.3V")
-		(at 123.19 116.84 180)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "125866bc-31a7-4f9e-9eea-56d980d3a7de")
-		(property "Reference" "#PWR029"
-			(at 123.19 113.03 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Value" "+3.3V"
-			(at 123.19 121.92 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 123.19 116.84 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" ""
-			(at 123.19 116.84 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
-			(at 123.19 116.84 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(pin "1"
-			(uuid "702b983a-43f7-41ff-af78-97071187dcc9")
-		)
-		(instances
-			(project "OHBeacon"
-				(path "/4e0e7048-b221-4c06-a0a7-7b0ffd7a96a3"
-					(reference "#PWR029")
 					(unit 1)
 				)
 			)
@@ -8413,7 +8347,7 @@
 				(justify right)
 			)
 		)
-		(property "Value" "RED"
+		(property "Value" "GREEN"
 			(at 29.21 40.9574 90)
 			(effects
 				(font
@@ -8538,6 +8472,71 @@
 			(project "OHBeacon"
 				(path "/4e0e7048-b221-4c06-a0a7-7b0ffd7a96a3"
 					(reference "C3")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:+BATT")
+		(at 123.19 116.84 180)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "6efd6809-719d-4ffa-bf8d-c070b8b6521e")
+		(property "Reference" "#PWR030"
+			(at 123.19 113.03 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+BATT"
+			(at 123.19 120.904 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 123.19 116.84 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 123.19 116.84 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"+BATT\""
+			(at 123.19 116.84 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "02ca6ba3-626c-44e1-87f3-eed5da3c8a8e")
+		)
+		(instances
+			(project "OHBeacon"
+				(path "/4e0e7048-b221-4c06-a0a7-7b0ffd7a96a3"
+					(reference "#PWR030")
 					(unit 1)
 				)
 			)
@@ -10129,6 +10128,73 @@
 		)
 	)
 	(symbol
+		(lib_id "power:PWR_FLAG")
+		(at 123.19 101.6 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "afbf8c30-f7cb-421a-a1b4-d15fb1b1f245")
+		(property "Reference" "#FLG03"
+			(at 123.19 99.695 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "PWR_FLAG"
+			(at 125.73 100.3299 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" ""
+			(at 123.19 101.6 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "~"
+			(at 123.19 101.6 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "Special symbol for telling ERC where power comes from"
+			(at 123.19 101.6 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "be0967b9-79f8-47b6-8a13-4662687a7780")
+		)
+		(instances
+			(project "OHBeacon"
+				(path "/4e0e7048-b221-4c06-a0a7-7b0ffd7a96a3"
+					(reference "#FLG03")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
 		(lib_id "Switch:SW_Push")
 		(at 57.15 85.09 0)
 		(unit 1)
@@ -10346,7 +10412,7 @@
 				(justify right)
 			)
 		)
-		(property "Value" "10k"
+		(property "Value" "1k"
 			(at 163.83 48.768 0)
 			(effects
 				(font
