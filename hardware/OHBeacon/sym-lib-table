@@ -1,0 +1,4 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "JST CONNECTOR")(type "KiCad")(uri "${KIPRJMOD}/S2B-ZR-SM4A-TF.kicad_sym")(options "")(descr ""))
+)
