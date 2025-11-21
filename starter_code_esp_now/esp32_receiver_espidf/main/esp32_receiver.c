@@ -11,7 +11,7 @@
 //for deep sleep
 #include "esp_sleep.h"
 #define MICROSEC_TO_sEC 1000000ULL
-#define DEEP_SLEEP_SECONDS 10
+int deep_sleep_seconds = 10;
 
 #define LED_PIN 8
 
@@ -49,12 +49,11 @@ void esp_now_received(const esp_now_recv_info_t *message_received, const uint8_t
     int blue_val;
     int blink_mode;
     int position;
-    if((len == 15) && (data[0] == 'S') && (data[13] == 'Z')) {
+    if((len == 15) && (data[0] == 'S') && (data[12] == 'Z')) {
         sscanf((char*)data + 1, "%3d", &red_val);
         sscanf((char*)data + 4, "%3d", &green_val);
         sscanf((char*)data + 7, "%3d", &blue_val);
-        sscanf((char*)data + 10, "%1d", &blink_mode);
-        sscanf((char*)data + 11, "%2d", &position);
+        sscanf((char*)data + 10, "%2d", &position);
 
         printf("red: %d\n", red_val);
         printf("green: %d\n", green_val);
@@ -69,7 +68,15 @@ void esp_now_received(const esp_now_recv_info_t *message_received, const uint8_t
     }
 
     printf("Goodbye\n");
-    esp_sleep_enable_timer_wakeup(DEEP_SLEEP_SECONDS * MICROSEC_TO_sEC);
+    
+    if(position < 4) {
+        deep_sleep_seconds = 5;
+    }
+    else {
+        deep_sleep_seconds = 10;
+    }
+
+    esp_sleep_enable_timer_wakeup(deep_sleep_seconds * MICROSEC_TO_sEC);
     esp_deep_sleep_start();
 
 }
