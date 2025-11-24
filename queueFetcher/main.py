@@ -10,6 +10,7 @@ import time
 import json
 from fetcher import Fetcher
 import serial
+from send_macs import send_mac_addresses
 
 OUT_DIR = "./outstanding_json"
 BASE_STATION_ID = "A"
@@ -40,14 +41,16 @@ if __name__ == "__main__":
 
     fetcher = Fetcher(BASE_STATION_ID, COOKIES_FILE, configs=fetcher_configs)
 
-    # Precomputed valid course IDs. This list would change if new courses are added to OH queue.
-    valid_course_list = [808, 815, 816, 820, 823, 825, 826, 827, 829, 830, 833, 834, 839, 850, 856, 864, 866, 868, 869, 877, 878, 880, 881, 882, 883, 884, 887, 889, 890, 893, 894, 895, 896, 897, 898, 899, 900, 901, 902, 904, 905, 906, 907, 908, 909, 910, 911, 913, 916, 917, 918, 919]
-    fetcher.valid_course_list = valid_course_list
+    # send MAC addresses to ESP32
+    print("Sending MAC addresses to ESP32...")
+    send_mac_addresses(ser)
 
+    fetcher.get_valid_courses()
     fetcher.start_course_thread_manager(verbose=True)
 
     try:
         while True:
+
             time.sleep(2)
             events = fetcher.get_serial_events()
 

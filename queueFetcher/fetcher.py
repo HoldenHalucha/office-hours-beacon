@@ -86,7 +86,7 @@ class Fetcher:
             if verbose:
                 print(f"Course ID: {course['id']}, Name: {course['short_name']}")
             for queue in course["queues"]:
-                if verbose: print(f"    {queue["id"]}")
+                if verbose: print(f"{queue['id']}")
                 self.valid_course_list.append(queue["id"])
     
     def get_location_from_request(self, request: dict) -> tuple[bool, str]:
