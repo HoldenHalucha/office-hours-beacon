@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/michigan_blue"
+    tools:context=".MainActivity">
+
+    <TextView
+        android:id="@+id/nfc_tag_message"
+        android:layout_width="223dp"
+        android:layout_height="91dp"
+        android:layout_marginTop="7dp"
+        android:fontFamily="sans-serif-condensed-light"
+        android:gravity="center_horizontal|bottom"
+        android:text="Read Location ID"
+        android:textColor="@color/maize"
+        android:textSize="25sp"
+        android:textStyle="italic"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/instructions" />
+
+    <WebView
+        android:id="@+id/eecs_oh_webpage"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="4dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.473"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/reload_button"
+        app:layout_constraintVertical_bias="0.0" />
+
+    <Button
+        android:id="@+id/reload_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="11dp"
+        android:backgroundTint="@color/maize"
+        android:fontFamily="sans-serif-condensed-medium"
+        android:text="Update Field"
+        android:textColor="@color/michigan_blue"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/nfc_tag_message" />
+
+    <TextView
+        android:id="@+id/instructions"
+        android:layout_width="376dp"
+        android:layout_height="71dp"
+        android:layout_marginTop="19dp"
+        android:fontFamily="sans-serif-condensed-light"
+        android:gravity="left|bottom"
+        android:text="Connect to the office hours beacon devices by tapping your phone on the device. Make to enable NFC on your device if you haven't already. Copy the Location ID and paste it into the 'Location' field on eecs.help integrated webpage."
+        android:textColor="@color/white"
+        android:textSize="15sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/text_title" />
+
+    <TextView
+        android:id="@+id/text_title"
+        android:layout_width="312dp"
+        android:layout_height="53dp"
+        android:layout_marginStart="90dp"
+        android:layout_marginTop="26dp"
+        android:layout_marginEnd="9dp"
+        android:fontFamily="sans-serif-condensed-light"
+        android:gravity="left|bottom"
+        android:text="| EECS OH BEACON"
+        android:textColor="@color/white"
+        android:textSize="40sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="331dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/m_logo" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
