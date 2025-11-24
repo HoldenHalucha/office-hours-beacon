@@ -33,7 +33,7 @@ with open('mac_addresses.txt', 'r') as file:
 
         uart.write(line.encode('utf-8'))
         uart.flush()
-        time.sleep(0.1)
+        time.sleep(0.3)
 
 time.sleep(1)
 GPIO.output(ESP_SELECT, GPIO.LOW)
