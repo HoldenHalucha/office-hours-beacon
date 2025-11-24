@@ -21,13 +21,6 @@ COOKIES_FILE = "/home/user473/Documents/project/office-hours-beacon/queueFetcher
 
 os.makedirs(OUT_DIR, exist_ok=True)
 
-# Configure the serial port and baud rate
-ser = serial.Serial(
-    port='/dev/serial0',  # or '/dev/ttyS0' depending on your Pi model and OS
-    baudrate=9600,
-    timeout=1
-)
-
 
 
 if __name__ == "__main__":
@@ -43,7 +36,14 @@ if __name__ == "__main__":
 
     # send MAC addresses to ESP32
     print("Sending MAC addresses to ESP32...")
-    send_mac_addresses(ser)
+    send_mac_addresses()
+    
+    # Configure the serial port and baud rate
+    ser = serial.Serial(
+        port='/dev/serial0',  # or '/dev/ttyS0' depending on your Pi model and OS
+        baudrate=9600,
+        timeout=1
+    )
 
     fetcher.get_valid_courses()
     fetcher.start_course_thread_manager(verbose=True)

@@ -2,11 +2,12 @@ import serial
 import time
 import RPi.GPIO as GPIO
 
+MAC_ADDRESSES_FILE = '/home/user473/Documents/project/office-hours-beacon/queueFetcher/mac_addresses.txt'
+
 #this pin tells the esp32 to start a read
 ESP_SELECT = 23
-MAC_ADDR_LOOKUP = '/home/user473/Documents/project/office-hours-beacon/queueFetcher/mac_addresses.txt'
 
-def send_mac_addresses(ser):
+def send_mac_addresses():
     GPIO.setmode(GPIO.BCM)
     GPIO.setwarnings(False)
     GPIO.setup(ESP_SELECT, GPIO.OUT)
@@ -21,24 +22,27 @@ def send_mac_addresses(ser):
 
     time.sleep(1)
 
-    with open(MAC_ADDR_LOOKUP, 'r') as file:
+    with open(MAC_ADDRESSES_FILE, 'r') as file:
         line_count = sum(1 for _ in file)
     print(f"Number of lines: {line_count}")
 
 
-    with open(MAC_ADDR_LOOKUP, 'r') as file:
+    with open(MAC_ADDRESSES_FILE, 'r') as file:
         while True:
             line = file.readline()
             if not line:  # Break when no more lines
                 break
             print(len(line))
 
-        uart.write(line.encode('utf-8'))
-        uart.flush()
-        time.sleep(0.3)
+            uart.write(line.encode('utf-8'))
+            uart.flush()
+            time.sleep(0.1)
 
     time.sleep(1)
     GPIO.output(ESP_SELECT, GPIO.LOW)
-    # uart.close()
+    uart.close()
     time.sleep(2)
-
+    GPIO.cleanup()
+    
+# uart = serial.Serial('/dev/serial0', baudrate=9600, timeout=1)
+# send_mac_addresses()
