@@ -98,7 +98,7 @@ void esp_now_received(const esp_now_recv_info_t *message_received, const uint8_t
         printf("blue: %d\n", blue_val);
         printf("position: %d\n", position);
 
-        setColor(red_val, blue_val, green_val);
+        setColor(red_val, green_val, blue_val);
     }
 
     //message received but it is the wrong size, print error message

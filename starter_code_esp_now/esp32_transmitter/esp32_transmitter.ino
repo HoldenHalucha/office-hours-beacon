@@ -123,7 +123,7 @@ void setup() {
 
   pinMode(uart_select_pin, INPUT);
 
-  while(!digitalRead(uart_select_pin));
+  //while(!digitalRead(uart_select_pin));
 
   uint8_t mac[6];
   uint8_t text[18];
@@ -136,8 +136,8 @@ void setup() {
   }
   
   while(Serial2.available()) {
-    //Serial.println("made it here first");
-    //Serial.println(Serial.available());
+    Serial.println("made it here first");
+    Serial.println(Serial.available());
 
     if(Serial2.available() >= 18) {
       ++beacons_read;
@@ -230,11 +230,11 @@ void loop() {
         if (parseCommand(buffer, idx, deviceName, position, r, g, b)) {
           int beaconIndex = findBeaconIndexByName(deviceName);
           if (beaconIndex >= 0) {
-            // Format payload: "pos|r,g,b"
-            char payload[32];
-            int n = snprintf(payload, sizeof(payload), "%d|%d,%d,%d", position, r, g, b);
+            // Format payload: "SRRRGGGBBBPPZ"
+            char payload[] = "S00000024516Z";
+            int n = sprintf(payload, "S%03d%03d%03d%02dZ", r, g, b, position);
             if (n > 0) {
-              esp_err_t result = esp_now_send(beacons[beaconIndex].address, (uint8_t *)payload, (size_t)n);
+              esp_err_t result = esp_now_send(beacons[beaconIndex].address, (uint8_t *)payload, strlen(payload)+1);
               if (result == ESP_OK) {
                 Serial.print("Sent payload to ");
                 for (int i = 0; i < 4; ++i) Serial.print(beacons[beaconIndex].name[i]);
@@ -257,5 +257,5 @@ void loop() {
     }
   }
 
-  delay(5);
+  delay(1);
 }
