@@ -186,9 +186,10 @@ class Fetcher:
             
             time.sleep(self.course_polling_interval_seconds)
 
+        del self.active_course_threads[course_id]
+        
         if verbose:
             print(f"Course {course_id} thread expired after {self.course_thread_expiration_seconds} seconds.")
-            del self.active_course_threads[course_id]
     
     def spawn_course_thread(self, course_id, verbose=False):
         if verbose:

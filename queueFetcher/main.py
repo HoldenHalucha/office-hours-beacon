@@ -47,18 +47,23 @@ if __name__ == "__main__":
 
     fetcher.get_valid_courses()
     fetcher.start_course_thread_manager(verbose=True)
-
+    
+    active_beacons = {}
     try:
         while True:
 
-            time.sleep(2)
             events = fetcher.get_serial_events()
-
+            
             for event in events:
-                message = f"S{event['beacon_id']}%{event['queue_position']}%{event['course_color']}Z"
+                active_beacons[event['beacon_id']] = event
+                if event['queue_position'] == -1:
+                    del active_beacons[event['beacon_id']]
+
+            for beacon in active_beacons.values():
+                message = f"S{beacon['beacon_id']}%{beacon['queue_position']}%{beacon['course_color']}Z"
                 print(f"Sending serial message: {message}")
                 ser.write(message.encode('ascii'))
-                time.sleep(0.1)  # brief pause between messages
+                time.sleep(0.002)  # brief pause between messages
              
 
     except KeyboardInterrupt:
