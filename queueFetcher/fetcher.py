@@ -38,7 +38,6 @@ class Fetcher:
 
     def get_course_color(self) -> list[int]:
         offset = (len(self.active_course_threads)) / self.max_course * 360  # degrees
-        print(f"Course color offset: {offset} degrees")
         r = int((math.sin(math.radians(offset + 0)) + 1) / 2 * 255)
         g = int((math.sin(math.radians(offset + 120)) + 1) / 2 * 255)
         b = int((math.sin(math.radians(offset + 240)) + 1) / 2 * 255)
@@ -130,6 +129,22 @@ class Fetcher:
 
         return active_course_list
     
+    def get_pin_or_help_state(self, current_position, request: dict):
+
+        try:
+            if request["helping"]:
+                return -2
+        except KeyError:
+            pass
+        
+        try:
+            if request["pinned"]:
+                return -1
+        except KeyError:
+            pass
+        
+        return current_position
+    
     def course_thread(self, course_id, course_color, verbose=False):
         s = requests.Session()
         s = self.load_cookies_into_session(s)
@@ -143,6 +158,17 @@ class Fetcher:
             if r.status_code != 200:
                 raise RuntimeError(f"Failed to fetch JSON: {r.status_code} body: {r.text[:200]}")
             session = r.json()
+            
+            # override course color if available
+            for announcement in session["announcements"]:
+                message = announcement["content"]
+                try:
+                    color = message.split()
+                    color = [int(c) for c in color]
+                    
+                    if len(color) == 3: course_color = color
+                except:
+                    pass
 
             if verbose: 
                 print("--------------------------------")
@@ -154,6 +180,7 @@ class Fetcher:
 
                 if valid:
                     current_queued_beacon_id.append(beacon_id)
+                    queue_position = self.get_pin_or_help_state(queue_position, request)
 
                     # Check for new beacons on the queue or position changes
                     if beacon_id not in queued_beacons or queued_beacons[beacon_id] != queue_position:
@@ -178,7 +205,7 @@ class Fetcher:
                     with self.serial_event_lock:
                         event = {
                             'beacon_id': beacon_id,
-                            'queue_position': -1,  # Indicate removal from queue
+                            'queue_position': -3,  # Indicate removal from queue
                             'course_color': course_color
                         }
                         self.serial_events.append(event)
