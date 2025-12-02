@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "driver/gpio.h"
 #include "driver/adc.h"
+#include "esp_adc_cal.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "nvs_flash.h"
@@ -15,14 +16,25 @@
 #define NEOPIXEL_PIN GPIO_NUM_3
 #define PIXEL_COUNT 8
 
-#define ADC_CHANNEL ADC1_CHANNEL_1 
-#define ADC_ATTEN ADC_ATTEN_DB_11
+#define ADC_CHANNEL ADC1_CHANNEL_0 
+#define ADC_ATTEN ADC_ATTEN_DB_12
 #define ADC_UNIT ADC_UNIT_1
 #define ADC_WIDTH ADC_WIDTH_BIT_12
 
+bool message_received_ignore_main = false;
+
+tNeopixelContext neopixel;
+
+tNeopixel pixels[PIXEL_COUNT]; //array of neopixel objects
+
 void get_battery_volts() {
+    esp_adc_cal_characteristics_t adc_chars;
+
     adc1_config_width(ADC_WIDTH);
     adc1_config_channel_atten(ADC_CHANNEL, ADC_ATTEN);
+
+    esp_adc_cal_value_t val_type = esp_adc_cal_characterize(
+        ADC_UNIT, ADC_ATTEN, ADC_WIDTH_BIT_12, 1100, &adc_chars);
 
     //used https://docs.espressif.com/projects/esp-idf/en/release-v3.3/api-reference/peripherals/adc.html
     //and
@@ -30,9 +42,14 @@ void get_battery_volts() {
 
     int adc_raw = adc1_get_raw(ADC_CHANNEL);
 
-    float v_adc = ((float)adc_raw / 4095.0) * 3.3;
+    uint32_t voltage_mv = esp_adc_cal_raw_to_voltage(adc_raw, &adc_chars);
+    float v_adc = voltage_mv / 1000.0; // in Volts
 
-    float v_batt = v_adc * 1.5; //due to our voltage divider setup
+    // Battery calculation: Vadc = (2/3) * Vbatt => Vbatt = Vadc * (3/2)
+    float v_batt = v_adc * 1.5;
+
+    printf("Raw ADC: %d | ADC Voltage: %.3f V | Battery Voltage: %.3f V\n",
+            adc_raw, v_adc, v_batt);
 
     printf("Battery Voltage: %.2f V\n", v_batt);
 }
@@ -40,25 +57,81 @@ void get_battery_volts() {
 //for deep sleep
 #include "esp_sleep.h"
 #define MICROSEC_TO_sEC 1000000ULL
-int deep_sleep_seconds = 10;
+float deep_sleep_seconds = 10;
 
 // ESP-NOW/WiFi frequency and listening window
 uint16_t LISTEN_INTERVAL = 5000; //ms
 uint16_t LISTEN_WINDOW = 200; //ms
 
-void setColor(int red, int green, int blue) {
-    gpio_set_level(NEOPIXEL_EN, 1);
-    tNeopixelContext neopixel = neopixel_Init(PIXEL_COUNT, NEOPIXEL_PIN);
+void setColor(int red, int green, int blue, int position) {
+    //POSITION MEANING
+    // -1 = PINNED
+    // -2 = BEING HELPED
+    // 1 thru inf = ACTUAL POSITION VALUE
 
-    tNeopixel pixels[PIXEL_COUNT]; //array of neopixel objects
-    for(int i = 0; i < PIXEL_COUNT; ++i) {
-        pixels[i].index = i;
-        pixels[i].rgb = NP_RGB(red, green, blue);
+    gpio_set_level(NEOPIXEL_EN, 1);
+
+    int blink_pos_val = 0;
+    //logic to decide how much to blink
+    if(position >= 4) {
+        blink_pos_val = 2;
+    }
+    else if(position < 4 && position > 1) {
+        blink_pos_val = 2;
+    }
+    else if(position == 1) {
+        blink_pos_val = 10;
+    }
+    else if(position == -2 || position == -1) {
+        blink_pos_val = 0;
+    }
+    
+    if(position == -1) {
+        for(float brightness = 0.0; brightness <= 1.0; brightness+=0.1) {
+            for(int i = 0; i < PIXEL_COUNT; ++i) {
+                pixels[i].index = i;
+                int actual_red = red * brightness;
+                int actual_green = green * brightness;
+                int actual_blue = blue * brightness;
+                pixels[i].rgb = NP_RGB(actual_red, actual_green, actual_blue);
+            }
+
+            neopixel_SetPixel(neopixel, pixels, PIXEL_COUNT);
+            vTaskDelay(pdMS_TO_TICKS(100));
+        }
+        for(float brightness = 1.0; brightness >= 0.0; brightness-=0.1) {
+            for(int i = 0; i < PIXEL_COUNT; ++i) {
+                pixels[i].index = i;
+                int actual_red = red * brightness;
+                int actual_green = green * brightness;
+                int actual_blue = blue * brightness;
+                pixels[i].rgb = NP_RGB(actual_red, actual_green, actual_blue);
+            }
+
+            neopixel_SetPixel(neopixel, pixels, PIXEL_COUNT);
+            vTaskDelay(pdMS_TO_TICKS(100));
+        }
     }
 
-    neopixel_SetPixel(neopixel, pixels, PIXEL_COUNT);
-    vTaskDelay(pdMS_TO_TICKS(500));
 
+    for(int blink = 0; blink < blink_pos_val; ++blink) {
+        for(int i = 0; i < PIXEL_COUNT; ++i) {
+            pixels[i].index = i;
+            pixels[i].rgb = NP_RGB(red, green, blue);
+        }
+
+        neopixel_SetPixel(neopixel, pixels, PIXEL_COUNT);
+        vTaskDelay(pdMS_TO_TICKS(200));
+
+        //turn everything off
+        for(int i = 0; i < PIXEL_COUNT; ++i) {
+            pixels[i].index = i;
+            pixels[i].rgb = NP_RGB(0, 0, 0);
+        }
+        neopixel_SetPixel(neopixel, pixels, PIXEL_COUNT);
+        vTaskDelay(pdMS_TO_TICKS(200));
+    }
+    
 
     //turn everything off
     for(int i = 0; i < PIXEL_COUNT; ++i) {
@@ -67,10 +140,14 @@ void setColor(int red, int green, int blue) {
     }
     neopixel_SetPixel(neopixel, pixels, PIXEL_COUNT);
     gpio_set_level(NEOPIXEL_EN, 0);
+    
 }
 
 // should hopefully call this when a message is received
 void esp_now_received(const esp_now_recv_info_t *message_received, const uint8_t *data, int len) {
+    message_received_ignore_main = true;
+
+
     printf("Received stuff from MAC: ");
     for (int i = 0; i < 6; i++) printf("%02X", message_received->src_addr[i]);
     printf(" | Length: %d | RSSI: %d\n", len, message_received->rx_ctrl->rssi);
@@ -98,7 +175,7 @@ void esp_now_received(const esp_now_recv_info_t *message_received, const uint8_t
         printf("blue: %d\n", blue_val);
         printf("position: %d\n", position);
 
-        setColor(red_val, green_val, blue_val);
+        setColor(red_val, green_val, blue_val, position);
     }
 
     //message received but it is the wrong size, print error message
@@ -108,11 +185,14 @@ void esp_now_received(const esp_now_recv_info_t *message_received, const uint8_t
 
     printf("Goodbye\n");
     
-    if(position < 4) {
+    if(position >= 4) {
+        deep_sleep_seconds = 10;
+    }
+    else if(position > 1 && position < 4) {
         deep_sleep_seconds = 5;
     }
     else {
-        deep_sleep_seconds = 10;
+        deep_sleep_seconds = 0.8;
     }
 
     esp_sleep_enable_timer_wakeup(deep_sleep_seconds * MICROSEC_TO_sEC);
@@ -124,6 +204,8 @@ void esp_now_received(const esp_now_recv_info_t *message_received, const uint8_t
 void app_init(void) {
     vTaskDelay(500 / portTICK_PERIOD_MS);
     printf("Hello\n");
+
+    neopixel = neopixel_Init(PIXEL_COUNT, NEOPIXEL_PIN);
 
     // need this for esp-now
     ESP_ERROR_CHECK(nvs_flash_init());
@@ -167,8 +249,10 @@ void app_main(void)
     app_init();
 
     
-    while(((xTaskGetTickCount() - start) * portTICK_PERIOD_MS) < 4000);
-    printf("No message, finna timeout\n");
-    esp_sleep_enable_timer_wakeup(deep_sleep_seconds * MICROSEC_TO_sEC);
-    esp_deep_sleep_start();
+    while(((xTaskGetTickCount() - start) * portTICK_PERIOD_MS) < 2000);
+    if(!message_received_ignore_main) {
+        printf("No message, finna timeout\n");
+        esp_sleep_enable_timer_wakeup(deep_sleep_seconds * MICROSEC_TO_sEC);
+        esp_deep_sleep_start();
+    }
 }

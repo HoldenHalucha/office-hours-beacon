@@ -108,10 +108,18 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
   snprintf(macStr, sizeof(macStr), "%02X:%02X:%02X:%02X:%02X:%02X",
            mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3],
            mac_addr[4], mac_addr[5]);
+
   Serial.print("Sent to ");
   Serial.print(macStr);
   Serial.print(" -> ");
   Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Success" : "Fail");
+
+  // Deregister this peer now that the send is finished
+  esp_err_t err = esp_now_del_peer(mac_addr);
+  if (err != ESP_OK) {
+    Serial.print("Failed to delete peer: ");
+    Serial.println((int)err);
+  }
 }
 
 void setup() {
@@ -195,6 +203,8 @@ void setup() {
 
   esp_now_register_send_cb(OnDataSent);
 
+  //register before sending instead and then deregister after sent to work around peer-to-peer limit
+  /* 
   for (int i = 0; i < beacons_read; i++) {
     esp_now_peer_info_t peerInfo = {};
     memcpy(peerInfo.peer_addr, beacons[i].address, 6);
@@ -206,7 +216,7 @@ void setup() {
       Serial.println(i + 1);
     }
   }
-  
+  */
 
 }
 
@@ -214,6 +224,8 @@ void loop() {
   // Read UART for commands: S{name}%{position}%{[r,g,b]}Z
   static char buffer[128];
   static size_t idx = 0;
+  
+  esp_now_peer_info_t peerInfo = {};
 
   while (Serial2.available() > 0) {
     char c = (char)Serial2.read();
@@ -234,6 +246,17 @@ void loop() {
             char payload[] = "S00000024516Z";
             int n = sprintf(payload, "S%03d%03d%03d%02dZ", r, g, b, position);
             if (n > 0) {
+              //register
+              memcpy(peerInfo.peer_addr, beacons[beaconIndex].address, 6);
+              peerInfo.channel = 0;
+              peerInfo.encrypt = false;
+              
+              if (esp_now_add_peer(&peerInfo) != ESP_OK) {
+                Serial.print("Failed to add peer ");
+                Serial.println(beaconIndex + 1);
+              }
+
+              //send
               esp_err_t result = esp_now_send(beacons[beaconIndex].address, (uint8_t *)payload, strlen(payload)+1);
               if (result == ESP_OK) {
                 Serial.print("Sent payload to ");
