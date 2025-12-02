@@ -56,7 +56,13 @@ if __name__ == "__main__":
             
             for event in events:
                 active_beacons[event['beacon_id']] = event
+
                 if event['queue_position'] == -3:
+                    for _ in range(10):
+                        message = f"S{event['beacon_id']}%{event['queue_position']}%{event['course_color']}Z"
+                        ser.write(message.encode('ascii'))
+                        time.sleep(0.002)  # brief pause between messages
+
                     del active_beacons[event['beacon_id']]
 
             for beacon in active_beacons.values():
