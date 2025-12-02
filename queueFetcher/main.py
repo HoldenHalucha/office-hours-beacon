@@ -26,9 +26,9 @@ os.makedirs(OUT_DIR, exist_ok=True)
 if __name__ == "__main__":
 
     fetcher_configs = {
-        'max_course': 2,
-        'course_polling_interval_seconds': 2,
-        'course_thread_expiration_seconds': 10,
+        'max_course': 5,
+        'course_polling_interval_seconds': 1,
+        'course_thread_expiration_seconds': 2700,
         'active_course_scan_interval_seconds': 5
     }
 
@@ -56,7 +56,7 @@ if __name__ == "__main__":
             
             for event in events:
                 active_beacons[event['beacon_id']] = event
-                if event['queue_position'] == -1:
+                if event['queue_position'] == -3:
                     del active_beacons[event['beacon_id']]
 
             for beacon in active_beacons.values():

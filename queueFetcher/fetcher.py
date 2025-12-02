@@ -164,9 +164,11 @@ class Fetcher:
                 message = announcement["content"]
                 try:
                     color = message.split()
-                    color = [int(c) for c in color]
+                    color = [max(0, min(int(c), 255)) for c in color]
                     
-                    if len(color) == 3: course_color = color
+                    if len(color) == 3:
+                        course_color = color
+                        break
                 except:
                     pass
 
@@ -176,23 +178,23 @@ class Fetcher:
             
             current_queued_beacon_id = []
             for queue_position, request in enumerate(session["queue"]):
+                queue_position +=1 # make position 1-indexed
                 valid, beacon_id = self.get_location_from_request(request)
 
                 if valid:
                     current_queued_beacon_id.append(beacon_id)
                     queue_position = self.get_pin_or_help_state(queue_position, request)
 
-                    # Check for new beacons on the queue or position changes
-                    if beacon_id not in queued_beacons or queued_beacons[beacon_id] != queue_position:
-                        queued_beacons[beacon_id] = queue_position
+                    current_beacon_state = {
+                        'beacon_id': beacon_id,
+                        'queue_position': queue_position,
+                        'course_color': course_color
+                    }
 
-                        with self.serial_event_lock:
-                            event = {
-                                'beacon_id': beacon_id,
-                                'queue_position': queue_position,
-                                'course_color': course_color
-                            }
-                            self.serial_events.append(event)
+                    queued_beacons[beacon_id] = current_beacon_state
+
+                    with self.serial_event_lock:
+                        self.serial_events.append(current_beacon_state)
 
                     last_active_time = time.time()
                     if verbose: print(f"Base station {self.base_station_id} detected beacon_id: {beacon_id} in course {course_id}")

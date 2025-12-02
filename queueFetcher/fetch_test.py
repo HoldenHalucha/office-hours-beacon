@@ -14,7 +14,7 @@ import json
 BASE_STATION_ID = "A"
 
 # Absolute path to cookies file
-COOKIES_FILE = "C:/Users/wendy/OneDrive - Umich/EECS 473/Project/office-hours-beacon/queueFetcher/oh_cookies.json"
+COOKIES_FILE = "C:/Users/jacky/OneDrive - Umich/EECS 473/Project/office-hours-beacon/queueFetcher/oh_cookies.json"
 
 def timeit(func):
     """Decorator that prints the time a function takes to execute."""
@@ -30,8 +30,8 @@ def timeit(func):
 fetcher_configs = {
     'max_course': 5,
     'course_polling_interval_seconds': 1,
-    'course_thread_expiration_seconds': 10,
-    'active_course_scan_interval_seconds': 2
+    'course_thread_expiration_seconds': 2700,
+    'active_course_scan_interval_seconds': 5
 }
 
 def get_driver(headless=True):
