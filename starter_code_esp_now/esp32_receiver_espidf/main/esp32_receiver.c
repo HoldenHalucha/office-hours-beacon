@@ -21,6 +21,18 @@
 #define ADC_UNIT ADC_UNIT_1
 #define ADC_WIDTH ADC_WIDTH_BIT_12
 
+//to avoid long delays between position switches I am changing to have a struct for RTOS stuff
+typedef struct {
+    int red;
+    int green;
+    int blue;
+    int position;
+    bool new_command;
+} command_t;
+
+command_t command = {0,0,0,99,0};
+SemaphoreHandle_t command_semaphore;
+
 bool message_received_ignore_main = false;
 
 tNeopixelContext neopixel;
@@ -57,11 +69,20 @@ void get_battery_volts() {
 //for deep sleep
 #include "esp_sleep.h"
 #define MICROSEC_TO_sEC 1000000ULL
-float deep_sleep_seconds = 10;
+float deep_sleep_seconds = 6.7;
 
 // ESP-NOW/WiFi frequency and listening window
 uint16_t LISTEN_INTERVAL = 5000; //ms
 uint16_t LISTEN_WINDOW = 200; //ms
+
+void poweroff_neopixels() {
+    for(int i = 0; i < PIXEL_COUNT; ++i) {
+        pixels[i].index = i;
+        pixels[i].rgb = NP_RGB(0, 0, 0);
+    }
+    neopixel_SetPixel(neopixel, pixels, PIXEL_COUNT);
+    gpio_set_level(NEOPIXEL_EN, 0);
+}
 
 void setColor(int red, int green, int blue, int position) {
     //POSITION MEANING
@@ -86,34 +107,87 @@ void setColor(int red, int green, int blue, int position) {
         blink_pos_val = 0;
     }
     
+
     if(position == -1) {
-        for(float brightness = 0.0; brightness <= 1.0; brightness+=0.1) {
+        for(float brightness = 0.0; brightness <= 1.0; brightness+=0.05) {
             for(int i = 0; i < PIXEL_COUNT; ++i) {
                 pixels[i].index = i;
                 int actual_red = red * brightness;
                 int actual_green = green * brightness;
                 int actual_blue = blue * brightness;
-                pixels[i].rgb = NP_RGB(actual_red, actual_green, actual_blue);
+                pixels[i].rgb = NP_RGB(actual_red, actual_blue, actual_green);
             }
 
             neopixel_SetPixel(neopixel, pixels, PIXEL_COUNT);
-            vTaskDelay(pdMS_TO_TICKS(100));
+            vTaskDelay(pdMS_TO_TICKS(70));
         }
-        for(float brightness = 1.0; brightness >= 0.0; brightness-=0.1) {
+        for(float brightness = 1.0; brightness >= 0.0; brightness-=0.05) {
             for(int i = 0; i < PIXEL_COUNT; ++i) {
                 pixels[i].index = i;
                 int actual_red = red * brightness;
                 int actual_green = green * brightness;
                 int actual_blue = blue * brightness;
-                pixels[i].rgb = NP_RGB(actual_red, actual_green, actual_blue);
+                pixels[i].rgb = NP_RGB(actual_red, actual_blue, actual_green);
             }
 
             neopixel_SetPixel(neopixel, pixels, PIXEL_COUNT);
-            vTaskDelay(pdMS_TO_TICKS(100));
+            vTaskDelay(pdMS_TO_TICKS(70));
         }
     }
 
 
+    else if(position == 2 || position == 3) {
+        for(int i = 0; i < PIXEL_COUNT; ++i) {
+            pixels[i].index = i;
+            pixels[i].rgb = NP_RGB(red*0.30, blue*0.30, green*0.30);
+        }
+        neopixel_SetPixel(neopixel, pixels, PIXEL_COUNT);
+        //gpio_set_level(NEOPIXEL_EN, 0);
+    }
+
+
+    else if(position >= 4) {
+        for(int i = 0; i < PIXEL_COUNT; ++i) {
+            pixels[i].index = i;
+            pixels[i].rgb = NP_RGB(red*0.05, blue*0.05, green*0.05);
+        }
+        neopixel_SetPixel(neopixel, pixels, PIXEL_COUNT);
+        //gpio_set_level(NEOPIXEL_EN, 0);
+    }
+
+
+    else if(position == 1) {
+        //for(int blink = 0; blink < 10; ++blink) {
+        for(int i = 0; i < PIXEL_COUNT; ++i) {
+            pixels[i].index = i;
+            pixels[i].rgb = NP_RGB(red, blue, green);
+        }
+
+        neopixel_SetPixel(neopixel, pixels, PIXEL_COUNT);
+        vTaskDelay(pdMS_TO_TICKS(200));
+
+        //turn everything off
+        for(int i = 0; i < PIXEL_COUNT; ++i) {
+            pixels[i].index = i;
+            pixels[i].rgb = NP_RGB(0, 0, 0);
+        }
+        neopixel_SetPixel(neopixel, pixels, PIXEL_COUNT);
+        vTaskDelay(pdMS_TO_TICKS(200));
+        //gpio_set_level(NEOPIXEL_EN, 0);
+        //}
+    }
+
+    else {
+        for(int i = 0; i < PIXEL_COUNT; ++i) {
+            pixels[i].index = i;
+            pixels[i].rgb = NP_RGB(0, 0, 0);
+        }
+        neopixel_SetPixel(neopixel, pixels, PIXEL_COUNT);
+        gpio_set_level(NEOPIXEL_EN, 0);
+
+    }
+
+    /*
     for(int blink = 0; blink < blink_pos_val; ++blink) {
         for(int i = 0; i < PIXEL_COUNT; ++i) {
             pixels[i].index = i;
@@ -140,13 +214,12 @@ void setColor(int red, int green, int blue, int position) {
     }
     neopixel_SetPixel(neopixel, pixels, PIXEL_COUNT);
     gpio_set_level(NEOPIXEL_EN, 0);
-    
+    */
 }
 
 // should hopefully call this when a message is received
 void esp_now_received(const esp_now_recv_info_t *message_received, const uint8_t *data, int len) {
     message_received_ignore_main = true;
-
 
     printf("Received stuff from MAC: ");
     for (int i = 0; i < 6; i++) printf("%02X", message_received->src_addr[i]);
@@ -175,13 +248,26 @@ void esp_now_received(const esp_now_recv_info_t *message_received, const uint8_t
         printf("blue: %d\n", blue_val);
         printf("position: %d\n", position);
 
-        setColor(red_val, green_val, blue_val, position);
+        //setColor(red_val, green_val, blue_val, position);
+
+        //changing the actual global command struct to avoid delays 
+        if(xSemaphoreTake(command_semaphore, 0) == pdTRUE) {
+            command.red = red_val;
+            command.blue = blue_val;
+            command.green = green_val;
+            command.position = position;
+            command.new_command = 1; //latest command
+            xSemaphoreGive(command_semaphore);
+        }
     }
 
     //message received but it is the wrong size, print error message
     else {
         printf("ERROR: Invalid message length or format. Possible loss of packets!!!\n");
     }
+
+    //poweroff_neopixels();
+    /*
 
     printf("Goodbye\n");
     
@@ -194,10 +280,36 @@ void esp_now_received(const esp_now_recv_info_t *message_received, const uint8_t
     else {
         deep_sleep_seconds = 0.8;
     }
+    */
 
-    esp_sleep_enable_timer_wakeup(deep_sleep_seconds * MICROSEC_TO_sEC);
-    esp_deep_sleep_start();
+    if(position == -3) {
+        esp_sleep_enable_timer_wakeup(deep_sleep_seconds * MICROSEC_TO_sEC);
+        esp_deep_sleep_start();
+    }
 
+}
+
+void setting_command_task(void *pvParameters) {
+    while (1) {
+        bool update = 0;
+        command_t command_copy;
+
+        if (xSemaphoreTake(command_semaphore, 10 / portTICK_PERIOD_MS) == pdTRUE) {
+            if (command.new_command) {
+                update = 1;
+                command_copy = command;
+                command.new_command = 0;  //this is no longer new
+            }
+            xSemaphoreGive(command_semaphore);
+        }
+
+        if (update) {
+            setColor(command_copy.red, command_copy.green, command_copy.blue, command_copy.position);
+        }
+
+        // Small delay so task isn't busy-waiting
+        vTaskDelay(pdMS_TO_TICKS(50));
+    }
 }
 
 
@@ -239,20 +351,27 @@ void app_init(void) {
 
     // Register the receive callback
     ESP_ERROR_CHECK(esp_now_register_recv_cb(esp_now_received));
+
+    command_semaphore = xSemaphoreCreateMutex(); //correct syntax?
+    xTaskCreate(setting_command_task, "command_task", 4096, NULL, 5, NULL);
 }
 
 
 void app_main(void)
 {
-    TickType_t start = xTaskGetTickCount();
-    get_battery_volts();
     app_init();
+    
+    //TickType_t start = xTaskGetTickCount();
+    get_battery_volts();
 
     
-    while(((xTaskGetTickCount() - start) * portTICK_PERIOD_MS) < 2000);
+    //while(((xTaskGetTickCount() - start) * portTICK_PERIOD_MS) < 5000);
+    vTaskDelay(pdMS_TO_TICKS(2000));
+
     if(!message_received_ignore_main) {
         printf("No message, finna timeout\n");
         esp_sleep_enable_timer_wakeup(deep_sleep_seconds * MICROSEC_TO_sEC);
         esp_deep_sleep_start();
     }
+    
 }
