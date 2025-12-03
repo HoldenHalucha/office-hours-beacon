@@ -14,6 +14,7 @@ from selenium.webdriver.chrome.options import Options
 import requests
 import threading
 import math
+import re
 
 class Fetcher:
     def __init__(self, base_station_id: str, cookies_file: str, configs: dict):
@@ -145,6 +146,20 @@ class Fetcher:
         
         return current_position
     
+    def get_custom_color_from_message(self, message: str):
+        delimiters = ["R", "G", "B", " "]
+        regex_pattern = '|'.join(map(re.escape, delimiters))
+        parts = re.split(regex_pattern, message)
+        
+        try:
+            color = [max(0, min(int(c), 255)) for c in parts if c.isdigit()]
+            if len(color) == 3:
+                return color
+        except:
+            pass
+        
+        return None
+    
     def course_thread(self, course_id, course_color, verbose=False):
         s = requests.Session()
         s = self.load_cookies_into_session(s)
@@ -162,15 +177,11 @@ class Fetcher:
             # override course color if available
             for announcement in session["announcements"]:
                 message = announcement["content"]
-                try:
-                    color = message.split()
-                    color = [max(0, min(int(c), 255)) for c in color]
-                    
-                    if len(color) == 3:
-                        course_color = color
-                        break
-                except:
-                    pass
+                color = self.get_custom_color_from_message(message)
+                if color:
+                    course_color = color
+                    break
+
 
             if verbose: 
                 print("--------------------------------")
