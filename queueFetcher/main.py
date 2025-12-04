@@ -12,15 +12,11 @@ from fetcher import Fetcher
 import serial
 from send_macs import send_mac_addresses
 
-OUT_DIR = "./outstanding_json"
-BASE_STATION_ID = "A"
 
+BASE_STATION_ID = "A"
 
 # Absolute path to cookies file
 COOKIES_FILE = "/home/user473/Documents/project/office-hours-beacon/queueFetcher/oh_cookies.json"
-
-os.makedirs(OUT_DIR, exist_ok=True)
-
 
 
 if __name__ == "__main__":
