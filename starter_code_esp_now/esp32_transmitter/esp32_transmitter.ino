@@ -1,23 +1,30 @@
 #include <esp_now.h>
 #include <WiFi.h>
 
+
 #define uart_select_pin 36
 #define MAX_BEACONS 40
+
 
 #define RXD2 16
 #define TXD2 17
 
+
 #define NAME_LEN 4
 #define NAME_SENTINEL '_'
+
 
 struct Beacon{
   char name[NAME_LEN];
   uint8_t address[6];
 };
 
+
 int beacons_read = 0;
 
+
 Beacon beacons[MAX_BEACONS];
+
 
 // Normalize a raw 1-4 char name into fixed 4 chars padded with sentinel
 static void packNameWithSentinel(const char *src4, char *dest4) {
@@ -36,6 +43,7 @@ static void packNameWithSentinel(const char *src4, char *dest4) {
   }
 }
 
+
 // Find index of beacon by 4-char device name, returns -1 if not found
 int findBeaconIndexByName(const char *deviceName) {
   for (int i = 0; i < beacons_read; ++i) {
@@ -48,6 +56,7 @@ int findBeaconIndexByName(const char *deviceName) {
   }
   return -1;
 }
+
 
 // Parse command of format: S{device_name}%{position}%{[r,g,b]}Z
 // On success, fills deviceName(4 chars, not null-terminated), position, r,g,b and returns true
@@ -103,31 +112,38 @@ bool parseCommand(const char *cmd, size_t len, char *deviceNameOut, int &positio
   return true;
 }
 
+
 void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
   char macStr[18];
   snprintf(macStr, sizeof(macStr), "%02X:%02X:%02X:%02X:%02X:%02X",
            mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3],
            mac_addr[4], mac_addr[5]);
 
+  /*
   Serial.print("Sent to ");
   Serial.print(macStr);
   Serial.print(" -> ");
   Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Success" : "Fail");
+  */
 
   // Deregister this peer now that the send is finished
   esp_err_t err = esp_now_del_peer(mac_addr);
+  /*
   if (err != ESP_OK) {
     Serial.print("Failed to delete peer: ");
     Serial.println((int)err);
   }
+  */
 }
 
+
 void setup() {
-  Serial2.begin(9600, SERIAL_8N1, RXD2, TXD2);
-  Serial.begin(115200);
-  
-  //for testing
-  Serial.println("HELLO THERE");
+  // Use UART0 (Serial) on RX0/TX0 for what used to be Serial2
+  Serial.begin(9600);  // acts as the command/data UART now
+
+  // Old debug port, not needed now
+  // Serial.begin(115200);
+  // Serial.println("HELLO THERE");
 
   pinMode(uart_select_pin, INPUT);
 
@@ -139,20 +155,20 @@ void setup() {
 
   Beacon temp;
 
-  while(!Serial2.available()){
+  while(!Serial.available()){
     //do nothing
   }
   
-  while(Serial2.available()) {
-    Serial.println("made it here first");
-    Serial.println(Serial.available());
+  while(Serial.available()) {
+    // Serial.println("made it here first");
+    // Serial.println(Serial.available());
 
-    if(Serial2.available() >= 18) {
+    if(Serial.available() >= 18) {
       ++beacons_read;
-      Serial.print("Beacon Number ");
-      Serial.println(beacons_read);
+      // Serial.print("Beacon Number ");
+      // Serial.println(beacons_read);
       
-      Serial2.readBytes(text, 18);
+      Serial.readBytes(text, 18);
 
       for(int i = 0; i < NAME_LEN; ++i) {
         name[i] = text[i];
@@ -165,7 +181,7 @@ void setup() {
           mac[mac_ind++] = (uint8_t)strtoul(hexPair, NULL, 16);
       }
 
-      
+      /*
       Serial.printf("Name (raw): %s\n", name);
 
       Serial.print("MAC: ");
@@ -174,8 +190,8 @@ void setup() {
         if (i < 5) Serial.print(", ");
       }
       Serial.print("\n\n");
+      */
 
-      
       // Add to the array of beacons (normalize to sentinel-padded)
       packNameWithSentinel(name, temp.name);
 
@@ -194,10 +210,10 @@ void setup() {
   delay(500);
 
   WiFi.mode(WIFI_STA);
-  Serial.println("ESP-NOW Multi-Address Sender Initialized");
+  // Serial.println("ESP-NOW Multi-Address Sender Initialized");
 
   if (esp_now_init() != ESP_OK) {
-    Serial.println("Error initializing ESP-NOW");
+    // Serial.println("Error initializing ESP-NOW");
     return;
   }
 
@@ -217,8 +233,8 @@ void setup() {
     }
   }
   */
-
 }
+
 
 void loop() {
   // Read UART for commands: S{name}%{position}%{[r,g,b]}Z
@@ -227,8 +243,9 @@ void loop() {
   
   esp_now_peer_info_t peerInfo = {};
 
-  while (Serial2.available() > 0) {
-    char c = (char)Serial2.read();
+  // Use Serial (UART0) instead of Serial2 here
+  while (Serial.available() > 0) {
+    char c = (char)Serial.read();
     if (idx == 0) {
       if (c != 'S') continue; // wait for start
       buffer[idx++] = c;
@@ -252,12 +269,13 @@ void loop() {
               peerInfo.encrypt = false;
               
               if (esp_now_add_peer(&peerInfo) != ESP_OK) {
-                Serial.print("Failed to add peer ");
-                Serial.println(beaconIndex + 1);
+                // Serial.print("Failed to add peer ");
+                // Serial.println(beaconIndex + 1);
               }
 
               //send
               esp_err_t result = esp_now_send(beacons[beaconIndex].address, (uint8_t *)payload, strlen(payload)+1);
+              /*
               if (result == ESP_OK) {
                 Serial.print("Sent payload to ");
                 for (int i = 0; i < 4; ++i) Serial.print(beacons[beaconIndex].name[i]);
@@ -266,14 +284,17 @@ void loop() {
               } else {
                 Serial.println("ESP-NOW send error");
               }
+              */
             }
           } else {
+            /*
             Serial.print("Unknown device name: ");
             for (int i = 0; i < 4; ++i) Serial.print(deviceName[i]);
             Serial.println();
+            */
           }
         } else {
-          Serial.println("Invalid command format");
+          // Serial.println("Invalid command format");
         }
         idx = 0; // reset for next command
       }

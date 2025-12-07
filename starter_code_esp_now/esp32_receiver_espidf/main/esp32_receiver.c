@@ -39,7 +39,7 @@ tNeopixelContext neopixel;
 
 tNeopixel pixels[PIXEL_COUNT]; //array of neopixel objects
 
-void get_battery_volts() {
+float get_battery_volts() {
     esp_adc_cal_characteristics_t adc_chars;
 
     adc1_config_width(ADC_WIDTH);
@@ -63,7 +63,9 @@ void get_battery_volts() {
     printf("Raw ADC: %d | ADC Voltage: %.3f V | Battery Voltage: %.3f V\n",
             adc_raw, v_adc, v_batt);
 
-    printf("Battery Voltage: %.2f V\n", v_batt);
+    printf("Battery Voltage: %.2f V\n", v_batt + 0.2);
+
+    return v_batt + 0.2;
 }
 
 //for deep sleep
@@ -89,6 +91,14 @@ void setColor(int red, int green, int blue, int position) {
     // -1 = PINNED
     // -2 = BEING HELPED
     // 1 thru inf = ACTUAL POSITION VALUE
+
+    //just a battery check
+    float battery_life = get_battery_volts();
+
+    if(battery_life < 3.3) {
+        esp_sleep_enable_timer_wakeup(20 * MICROSEC_TO_sEC);
+        esp_deep_sleep_start();
+    }
 
     gpio_set_level(NEOPIXEL_EN, 1);
 
@@ -312,7 +322,6 @@ void setting_command_task(void *pvParameters) {
     }
 }
 
-
 void app_init(void) {
     vTaskDelay(500 / portTICK_PERIOD_MS);
     printf("Hello\n");
@@ -359,10 +368,18 @@ void app_init(void) {
 
 void app_main(void)
 {
-    app_init();
     
     //TickType_t start = xTaskGetTickCount();
-    get_battery_volts();
+    float battery_life = get_battery_volts();
+
+    if(battery_life < 3.3) {
+        esp_sleep_enable_timer_wakeup(20 * MICROSEC_TO_sEC);
+        esp_deep_sleep_start();
+    }
+
+    else {
+        app_init();
+    }
 
     
     //while(((xTaskGetTickCount() - start) * portTICK_PERIOD_MS) < 5000);
