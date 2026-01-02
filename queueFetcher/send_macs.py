@@ -2,7 +2,7 @@ import serial
 import time
 import RPi.GPIO as GPIO
 
-MAC_ADDRESSES_FILE = '/home/user473/Documents/project/office-hours-beacon/queueFetcher/mac_addresses.txt'
+MAC_ADDRESSES_FILE = 'mac_addresses.txt'
 
 #this pin tells the esp32 to start a read
 ESP_SELECT = 2

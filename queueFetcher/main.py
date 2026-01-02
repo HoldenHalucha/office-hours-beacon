@@ -16,7 +16,7 @@ from send_macs import send_mac_addresses
 BASE_STATION_ID = "A"
 
 # Absolute path to cookies file
-COOKIES_FILE = "/home/user473/Documents/project/office-hours-beacon/queueFetcher/oh_cookies.json"
+COOKIES_FILE = "oh_cookies.json"
 
 
 if __name__ == "__main__":
